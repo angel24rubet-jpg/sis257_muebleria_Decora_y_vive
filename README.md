@@ -1,4 +1,4 @@
-MUEBLERIA “DECORA & VIVE”
+# MUEBLERIA “DECORA & VIVE”
 
 DESCRIPCION DEL PROYEXTO DE DESARROLLO DEL SISTEMA 
 El presente proyecto consiste en el desarrollo de un sistema web para la gestión y venta de muebles, diseñado para facilitar tanto la administración de los productos de una tienda como el proceso de compra por parte de los clientes.
