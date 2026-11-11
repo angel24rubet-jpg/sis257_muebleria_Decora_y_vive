@@ -7,6 +7,9 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { CategoriasModule } from "./categorias/categorias.module";
 import { ProductosModule } from "./productos/productos.module";
 import { ColoresModule } from "./colores/colores.module";
+import { ClientesModule } from './clientes/clientes.module';
+import { VentasModule } from './ventas/ventas.module';
+
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -30,6 +33,9 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     CategoriasModule,
     ProductosModule,
     ColoresModule,
+    ClientesModule,
+    VentasModule,
+    
   ],
   controllers: [AppController],
   providers: [AppService],
