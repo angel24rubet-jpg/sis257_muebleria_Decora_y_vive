@@ -7,13 +7,14 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
-import { ProductosService } from './productos.service';
-import { CreateProductoDto } from './dto/create-producto.dto';
-import { UpdateProductoDto } from './dto/update-producto.dto';
+import { ProductosService } from "./productos.service";
+import { CreateProductoDto } from "./dto/create-producto.dto";
+import { UpdateProductoDto } from "./dto/update-producto.dto";
+import { AsignarColoresDto } from "./dto/producto-color.dto";
 
-@Controller('productos')
+@Controller("productos")
 export class ProductosController {
   constructor(private readonly productosService: ProductosService) {}
 
@@ -30,23 +31,32 @@ export class ProductosController {
   }
 
   // Buscar un producto por ID
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  @Get(":id")
+  findOne(@Param("id", ParseIntPipe) id: number) {
     return this.productosService.findOne(id);
   }
 
   // Actualizar un producto
-  @Patch(':id')
+  @Patch(":id")
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number,
     @Body() updateProductoDto: UpdateProductoDto,
   ) {
     return this.productosService.update(id, updateProductoDto);
   }
 
+  // Actualizar colores y stock de un producto
+  @Patch(":id/colores")
+  asignarColores(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() asignarColoresDto: AsignarColoresDto,
+  ) {
+    return this.productosService.asignarColores(id, asignarColoresDto);
+  }
+
   // Eliminar un producto
-  @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  @Delete(":id")
+  remove(@Param("id", ParseIntPipe) id: number) {
     return this.productosService.remove(id);
   }
 }
