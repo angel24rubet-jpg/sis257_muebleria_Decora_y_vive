@@ -10,6 +10,7 @@ import { ColoresModule } from "./colores/colores.module";
 import { ClientesModule } from './clientes/clientes.module';
 import { VentasModule } from './ventas/ventas.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
+import { ReportesModule } from './reportes/reportes.module';
 
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
@@ -37,6 +38,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     ClientesModule,
     VentasModule,
     UsuariosModule,
+    ReportesModule,
     
   ],
   controllers: [AppController],

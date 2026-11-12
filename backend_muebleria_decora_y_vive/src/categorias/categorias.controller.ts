@@ -7,13 +7,13 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
-import { CategoriasService } from './categorias.service';
-import { CreateCategoriaDto } from './dto/create-categoria.dto';
-import { UpdateCategoriaDto } from './dto/update-categoria.dto';
+import { CategoriasService } from "./categorias.service";
+import { CreateCategoriaDto } from "./dto/create-categoria.dto";
+import { UpdateCategoriaDto } from "./dto/update-categoria.dto";
 
-@Controller('categorias')
+@Controller("categorias")
 export class CategoriasController {
   constructor(private readonly categoriasService: CategoriasService) {}
 
@@ -27,21 +27,26 @@ export class CategoriasController {
     return this.categoriasService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  @Get(":id")
+  findOne(@Param("id", ParseIntPipe) id: number) {
     return this.categoriasService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(":id")
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number,
     @Body() updateCategoriaDto: UpdateCategoriaDto,
   ) {
     return this.categoriasService.update(id, updateCategoriaDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  @Delete(":id")
+  remove(@Param("id", ParseIntPipe) id: number) {
     return this.categoriasService.remove(id);
+  }
+  // Cambiar estado de una categoria
+  @Patch(":id/estado")
+  cambiarEstado(@Param("id", ParseIntPipe) id: number) {
+    return this.categoriasService.cambiarEstado(id);
   }
 }

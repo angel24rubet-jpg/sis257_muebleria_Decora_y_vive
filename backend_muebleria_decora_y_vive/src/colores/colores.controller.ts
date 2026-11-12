@@ -7,13 +7,13 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
-import { ColoresService } from './colores.service';
-import { CreateColorDto } from './dto/create-color.dto';
-import { UpdateColorDto } from './dto/update-color.dto';
+import { ColoresService } from "./colores.service";
+import { CreateColorDto } from "./dto/create-color.dto";
+import { UpdateColorDto } from "./dto/update-color.dto";
 
-@Controller('colores')
+@Controller("colores")
 export class ColoresController {
   constructor(private readonly coloresService: ColoresService) {}
 
@@ -30,23 +30,28 @@ export class ColoresController {
   }
 
   // Buscar un color por ID
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  @Get(":id")
+  findOne(@Param("id", ParseIntPipe) id: number) {
     return this.coloresService.findOne(id);
   }
 
   // Actualizar un color
-  @Patch(':id')
+  @Patch(":id")
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number,
     @Body() updateColorDto: UpdateColorDto,
   ) {
     return this.coloresService.update(id, updateColorDto);
   }
 
   // Eliminar un color
-  @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  @Delete(":id")
+  remove(@Param("id", ParseIntPipe) id: number) {
     return this.coloresService.remove(id);
+  }
+  // Activar o desactivar un color
+  @Patch(":id/estado")
+  cambiarEstado(@Param("id") id: string) {
+    return this.coloresService.cambiarEstado(+id);
   }
 }

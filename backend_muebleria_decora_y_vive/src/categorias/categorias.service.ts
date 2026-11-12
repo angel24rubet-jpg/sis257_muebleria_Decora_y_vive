@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 
-import { Categoria } from './entities/categoria.entity';
-import { CreateCategoriaDto } from './dto/create-categoria.dto';
-import { UpdateCategoriaDto } from './dto/update-categoria.dto';
+import { Categoria } from "./entities/categoria.entity";
+import { CreateCategoriaDto } from "./dto/create-categoria.dto";
+import { UpdateCategoriaDto } from "./dto/update-categoria.dto";
 
 @Injectable()
 export class CategoriasService {
@@ -47,11 +47,29 @@ export class CategoriasService {
     return await this.categoriaRepository.save(categoria);
   }
 
-  // Eliminar una categoria
+  // Desactivar una categoria sin eliminarla de la base de datos
   async remove(id: number) {
     const categoria = await this.findOne(id);
-    await this.categoriaRepository.remove(categoria);
 
-    return { mensaje: 'Categoría eliminada correctamente' };
+    categoria.estado = false;
+
+    await this.categoriaRepository.save(categoria);
+
+    return { mensaje: "Categoria desactivada correctamente" };
+  }
+  // Cambiar el estado de una categoria
+  async cambiarEstado(id: number) {
+    const categoria = await this.findOne(id);
+
+    categoria.estado = !categoria.estado;
+
+    await this.categoriaRepository.save(categoria);
+
+    return {
+      mensaje: categoria.estado
+        ? "Categoria activada correctamente"
+        : "Categoria desactivada correctamente",
+      categoria,
+    };
   }
 }

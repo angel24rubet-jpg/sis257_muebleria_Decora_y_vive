@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 
-import { Color } from './entities/color.entity';
-import { CreateColorDto } from './dto/create-color.dto';
-import { UpdateColorDto } from './dto/update-color.dto';
+import { Color } from "./entities/color.entity";
+import { CreateColorDto } from "./dto/create-color.dto";
+import { UpdateColorDto } from "./dto/update-color.dto";
 
 @Injectable()
 export class ColoresService {
@@ -47,11 +47,31 @@ export class ColoresService {
     return await this.colorRepository.save(color);
   }
 
-  // Eliminar un color
+  // Desactivar un color (eliminación lógica)
   async remove(id: number) {
     const color = await this.findOne(id);
-    await this.colorRepository.remove(color);
 
-    return { mensaje: 'Color eliminado correctamente' };
+    color.estado = false;
+
+    await this.colorRepository.save(color);
+
+    return {
+      mensaje: "Color desactivado correctamente",
+    };
+  }
+  // Activar o desactivar un color
+  async cambiarEstado(id: number) {
+    const color = await this.findOne(id);
+
+    color.estado = !color.estado;
+
+    await this.colorRepository.save(color);
+
+    return {
+      mensaje: color.estado
+        ? "Color activado correctamente"
+        : "Color desactivado correctamente",
+      color,
+    };
   }
 }
