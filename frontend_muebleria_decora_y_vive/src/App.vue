@@ -40,9 +40,9 @@ import { RouterView } from 'vue-router'
             <span><i class="bi bi-telephone"></i></span>
             <span>+591 71234567</span>
           </span>
-          <RouterLink class="btn btn-primary btn-sm" to="/ventas">
-            <i class="bi bi-cart"></i> Carrito
-          </RouterLink>
+          <RouterLink class="btn btn-primary btn-sm" to="/compras">
+  <i class="bi bi-cart"></i> Carrito
+</RouterLink>
         </div>
       </div>
     </nav>
