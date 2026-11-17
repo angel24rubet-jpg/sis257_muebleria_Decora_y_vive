@@ -1,91 +1,65 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from "vue-router";
-import HelloWorld from "./components/HelloWorld.vue";
+import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <header>
-    <img
-      alt="Vue logo"
-      class="logo"
-      src="@/assets/logo.svg"
-      width="125"
-      height="125"
-    />
+  <div class="d-flex flex-column min-vh-100">
+    
+    <!-- BARRA DE NAVEGACIÓN GLOBAL (Inmortal) -->
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm px-4 py-3 navbar-custom">
+      <div class="container-fluid px-0">
+        <RouterLink class="navbar-brand" to="/">
+          <span class="d-flex flex-column text-uppercase text-xs fw-bold lh-sm">
+            <span class="" style="letter-spacing: .12rem;">Decora y Vive</span>
+            <span>Sistema Web</span>
+          </span>
+        </RouterLink>
+      
+        <div class="mx-auto d-lg-block d-none">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <RouterLink class="nav-link" to="/">Inicio</RouterLink>
+            </li>
+            <li class="nav-item">
+              <RouterLink class="nav-link" to="/nosotros">Nosotros</RouterLink>
+            </li>
+            <li class="nav-item">
+              <RouterLink class="nav-link" to="/productos">Productos</RouterLink>
+            </li>
+            <li class="nav-item">
+              <RouterLink class="nav-link" to="/testimonios">Testimonios</RouterLink>
+            </li>
+            <li class="nav-item">
+              <RouterLink class="nav-link" to="/contacto">Contacto</RouterLink>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="d-flex align-items-center gap-4">
+          <span class="d-flex align-items-center gap-2 fw-bold">
+            <span><i class="bi bi-telephone"></i></span>
+            <span>+591 71234567</span>
+          </span>
+          <RouterLink class="btn btn-primary btn-sm" to="/ventas">
+            <i class="bi bi-cart"></i> Carrito
+          </RouterLink>
+        </div>
+      </div>
+    </nav>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+    <!-- EL PIZARRÓN DINÁMICO (Aquí Vue dibuja las páginas que cambian) -->
+    <main class="flex-grow-1">
+      <RouterView />
+    </main>
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+/* Los RouterLink a veces se quedan de color azul por defecto. 
+   Esto asegura que el texto del logo se mantenga de color oscuro. */
+.navbar-brand {
+  color: #212529;
+  text-decoration: none;
 }
 </style>
