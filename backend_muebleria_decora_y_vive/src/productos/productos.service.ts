@@ -161,22 +161,26 @@ export class ProductosService {
     return await this.findOne(id);
   }
 
-  // Eliminar un productoa
-  async remove(id: number) {
-    const producto = await this.productoRepository.findOneBy({
-      id_producto: id,
-    });
+ // Eliminar producto de manera logica
+async remove(id: number) {
+  const producto = await this.productoRepository.findOneBy({
+    id_producto: id,
+  });
 
-    if (!producto) {
-      throw new NotFoundException(`Producto con ID ${id} no encontrado`);
-    }
-
-    await this.productoRepository.remove(producto);
-
-    return {
-      mensaje: "Producto eliminado correctamente",
-    };
+  if (!producto) {
+    throw new NotFoundException(
+      `Producto con ID ${id} no encontrado`,
+    );
   }
+
+  producto.estado = false;
+
+  await this.productoRepository.save(producto);
+
+  return {
+    mensaje: "Producto eliminado correctamente",
+  };
+}
   
 // Actualizar los colores y el stock de un producto
 async asignarColores(

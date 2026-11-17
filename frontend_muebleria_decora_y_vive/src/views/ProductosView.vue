@@ -4,6 +4,7 @@ import { listarProductos } from "@/services/productoService";
 import { listarCategorias } from "@/services/categoriaService";
 import api from "@/services/api";
 import { listarColores } from "@/services/colorService";
+import { eliminarProducto as eliminarProductoService } from "@/services/productoService";
 
 // Lista de productos
 const productos = ref<any[]>([]);
@@ -277,6 +278,20 @@ const modificarProducto = async () => {
   }
 };
 
+const eliminarProducto = async (id: number) => {
+  if (!confirm("¿Está seguro de eliminar este producto?")) return;
+
+  try {
+    mensaje.value = "";
+    await eliminarProductoService(id);
+    mensaje.value = "Producto eliminado correctamente";
+    await cargarProductos();
+  } catch (error) {
+    console.error(error);
+    mensaje.value = "No se pudo eliminar el producto";
+  }
+};
+
 // Ejecutar al abrir la pantalla
 onMounted(() => {
   cargarProductos();
@@ -477,6 +492,13 @@ onMounted(() => {
                 Editar
               </button>
             </td>
+            <button
+              v-if="producto.estado"
+              class="btn btn-danger btn-sm"
+              @click="eliminarProducto(producto.id_producto)"
+            >
+              Eliminar
+            </button>
           </tr>
 
           <tr v-if="productosFiltrados.length === 0">
