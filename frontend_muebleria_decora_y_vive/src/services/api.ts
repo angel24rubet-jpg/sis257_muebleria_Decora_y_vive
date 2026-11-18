@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// Configuracion general para conectar con el backend
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
@@ -8,5 +7,15 @@ const api = axios.create({
   },
 });
 
-// Exportar la instancia para utilizarla en los servicios
+// Agregar automaticamente el token JWT
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 export default api;
