@@ -1,271 +1,268 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import api from "@/services/api";
 import { useCarritoStore } from "@/stores/carrito";
-import { useAuthStore } from "@/stores/auth";
-
-const router = useRouter();
 const carrito = useCarritoStore();
-const auth = useAuthStore();
-
-const direccion = ref("");
-const cargando = ref(false);
-const error = ref("");
-const pedido = ref<any>(null);
-
-const nombreTitular = ref("");
-const comprobante = ref("");
-const enviandoPago = ref(false);
-const mensajePago = ref("");
-const pagoEnviado = ref(false);
-
-async function finalizarCompra() {
-  if (!auth.autenticado || auth.usuario?.rol !== "CLIENTE") {
-    router.push("/login");
-    return;
-  }
-
-  if (!direccion.value.trim()) {
-    error.value = "Ingresa tu dirección de entrega.";
-    return;
-  }
-
-  if (carrito.productos.length === 0) {
-    error.value = "Tu carrito está vacío.";
-    return;
-  }
-
-  cargando.value = true;
-  error.value = "";
-
-  try {
-    const datos = {
-      direccion_entrega: direccion.value.trim(),
-      detalles: carrito.productos.map((producto) => ({
-        id_producto_color: producto.id_producto_color,
-        cantidad: producto.cantidad,
-      })),
-    };
-
-    const respuesta = await api.post("/pedidos", datos);
-
-    pedido.value = respuesta.data;
-    carrito.vaciar();
-  } catch (e: any) {
-    error.value =
-      e.response?.data?.message ||
-      "No se pudo registrar el pedido. Verifica las existencias.";
-  } finally {
-    cargando.value = false;
-  }
-}
-
-async function enviarComprobante() {
-  if (!nombreTitular.value.trim() || !comprobante.value.trim()) {
-    mensajePago.value =
-      "Completa el nombre del titular y la referencia del comprobante.";
-    return;
-  }
-
-  enviandoPago.value = true;
-  mensajePago.value = "";
-
-  try {
-    await api.patch(`/pedidos/${pedido.value.id_pedido}/comprobante`, {
-      nombre_pagador: nombreTitular.value.trim(),
-      comprobante: comprobante.value.trim(),
-    });
-
-    pagoEnviado.value = true;
-    mensajePago.value =
-      "Datos enviados correctamente. Espera la verificación del administrador.";
-  } catch (e: any) {
-    mensajePago.value =
-      e.response?.data?.message || "No se pudieron enviar los datos del pago.";
-  } finally {
-    enviandoPago.value = false;
-  }
-}
+// Aquí tu compañero conectará la función para enviar el pedido al backend (PostgreSQL)
 </script>
 
 <template>
-  <main class="checkout">
-    <h1>Finalizar compra</h1>
-
-    <!-- REGISTRO DEL PEDIDO -->
-    <div v-if="!pedido" class="contenido">
-      <section class="datos">
-        <h2>Datos de entrega</h2>
-
-        <label>Dirección de entrega</label>
-        <textarea
-          v-model="direccion"
-          placeholder="Ingresa tu dirección completa"
-          rows="4"
-        ></textarea>
-
-        <h2>Resumen de compra</h2>
-
-        <article
-          v-for="producto in carrito.productos"
-          :key="producto.id_producto_color"
-          class="producto"
-        >
-          <span>{{ producto.nombre }} - {{ producto.color }}</span>
-          <span>
-            {{ producto.cantidad }} x Bs
-            {{ producto.precio.toFixed(2) }}
-          </span>
-        </article>
-
-        <h3>Total: Bs {{ carrito.total.toFixed(2) }}</h3>
-
-        <p v-if="error" class="error">{{ error }}</p>
-
-        <button
-          @click="finalizarCompra"
-          :disabled="cargando || !carrito.productos.length"
-        >
-          {{ cargando ? "Registrando pedido..." : "Confirmar pedido" }}
-        </button>
-      </section>
+  <div>
+    <!-- Single Page Header start -->
+    <div class="container-fluid page-header py-5">
+        <h1 class="text-center text-white display-6 wow fadeInUp" data-wow-delay="0.1s">Cheackout Page</h1>
+        <ol class="breadcrumb justify-content-center mb-0 wow fadeInUp" data-wow-delay="0.3s">
+            <li class="breadcrumb-item"><RouterLink to="/">Home</RouterLink></li>
+            <li class="breadcrumb-item"><a href="#">Pages</a></li>
+            <li class="breadcrumb-item active text-white">Cheackout</li>
+        </ol>
     </div>
+    <!-- Single Page Header End -->
 
-    <!-- PAGO DEL PEDIDO -->
-    <section v-else class="pago">
-      <h2>¡Pedido registrado correctamente!</h2>
+    <!-- Searvices Start -->
+    <div class="container-fluid px-0">
+        <div class="row g-0">
+            <div class="col-6 col-md-4 col-lg-2 border-start border-end wow fadeInUp" data-wow-delay="0.1s">
+                <div class="p-4">
+                    <div class="d-inline-flex align-items-center">
+                        <i class="fa fa-sync-alt fa-2x text-primary"></i>
+                        <div class="ms-4">
+                            <h6 class="text-uppercase mb-2">Free Return</h6>
+                            <p class="mb-0">30 days money back guarantee!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 border-end wow fadeInUp" data-wow-delay="0.2s">
+                <div class="p-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fab fa-telegram-plane fa-2x text-primary"></i>
+                        <div class="ms-4">
+                            <h6 class="text-uppercase mb-2">Free Shipping</h6>
+                            <p class="mb-0">Free shipping on all order</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 border-end wow fadeInUp" data-wow-delay="0.3s">
+                <div class="p-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-life-ring fa-2x text-primary"></i>
+                        <div class="ms-4">
+                            <h6 class="text-uppercase mb-2">Support 24/7</h6>
+                            <p class="mb-0">We support online 24 hrs a day</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 border-end wow fadeInUp" data-wow-delay="0.4s">
+                <div class="p-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-credit-card fa-2x text-primary"></i>
+                        <div class="ms-4">
+                            <h6 class="text-uppercase mb-2">Receive Gift Card</h6>
+                            <p class="mb-0">Recieve gift all over oder $50</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 border-end wow fadeInUp" data-wow-delay="0.5s">
+                <div class="p-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-lock fa-2x text-primary"></i>
+                        <div class="ms-4">
+                            <h6 class="text-uppercase mb-2">Secure Payment</h6>
+                            <p class="mb-0">We Value Your Security</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2 border-end wow fadeInUp" data-wow-delay="0.6s">
+                <div class="p-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-blog fa-2x text-primary"></i>
+                        <div class="ms-4">
+                            <h6 class="text-uppercase mb-2">Online Service</h6>
+                            <p class="mb-0">Free return products in 30 days</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Searvices End -->
 
-      <p>
-        Número de pedido:
-        <strong>{{ pedido.numero_pedido }}</strong>
-      </p>
-
-      <h3>Total a pagar: Bs {{ Number(pedido.total).toFixed(2) }}</h3>
-
-      <div v-if="!pagoEnviado">
-        <h2>Realiza tu pago mediante QR</h2>
-
-        <img src="/qr-pago.png" alt="Código QR provisional de demostración" />
-
-        <p>Una vez realizado el depósito, registra los siguientes datos:</p>
-
-        <label>Nombre del titular del depósito</label>
-        <input
-          v-model="nombreTitular"
-          type="text"
-          placeholder="Nombre completo del titular"
-          maxlength="100"
-        />
-
-        <label>Número de comprobante o referencia</label>
-        <input
-          v-model="comprobante"
-          type="text"
-          placeholder="Ingresa el número de operación"
-          maxlength="100"
-        />
-
-        <p v-if="mensajePago" class="error">
-          {{ mensajePago }}
-        </p>
-
-        <button @click="enviarComprobante" :disabled="enviandoPago">
-          {{ enviandoPago ? "Enviando..." : "Enviar datos de pago" }}
-        </button>
-      </div>
-
-      <div v-else class="confirmacion">
-        <h2>Datos de pago enviados</h2>
-        <p>{{ mensajePago }}</p>
-        <p>Tu pedido está pendiente de verificación.</p>
-
-        <button @click="router.push('/tienda')">Volver a la tienda</button>
-      </div>
-    </section>
-  </main>
+    <!-- Checkout Page Start -->
+    <div class="container-fluid bg-light overflow-hidden py-5">
+        <div class="container py-5">
+            <h1 class="mb-4 wow fadeInUp" data-wow-delay="0.1s">Billing details</h1>
+            <form action="#">
+                <div class="row g-5">
+                    <div class="col-md-12 col-lg-6 col-xl-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="row">
+                            <div class="col-md-12 col-lg-6">
+                                <div class="form-item w-100">
+                                    <label class="form-label my-3">First Name<sup>*</sup></label>
+                                    <input type="text" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-12 col-lg-6">
+                                <div class="form-item w-100">
+                                    <label class="form-label my-3">Last Name<sup>*</sup></label>
+                                    <input type="text" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <label class="form-label my-3">Company Name<sup>*</sup></label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="form-item">
+                            <label class="form-label my-3">Address <sup>*</sup></label>
+                            <input type="text" class="form-control" placeholder="House Number Street Name">
+                        </div>
+                        <div class="form-item">
+                            <label class="form-label my-3">Town/City<sup>*</sup></label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="form-item">
+                            <label class="form-label my-3">Country<sup>*</sup></label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="form-item">
+                            <label class="form-label my-3">Postcode/Zip<sup>*</sup></label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="form-item">
+                            <label class="form-label my-3">Mobile<sup>*</sup></label>
+                            <input type="tel" class="form-control">
+                        </div>
+                        <div class="form-item">
+                            <label class="form-label my-3">Email Address<sup>*</sup></label>
+                            <input type="email" class="form-control">
+                        </div>
+                        <div class="form-check my-3">
+                            <input type="checkbox" class="form-check-input" id="Account-1" name="Accounts"
+                                value="Accounts">
+                            <label class="form-check-label" for="Account-1">Create an account?</label>
+                        </div>
+                        <hr>
+                        <div class="form-check my-3">
+                            <input class="form-check-input" type="checkbox" id="Address-1" name="Address"
+                                value="Address">
+                            <label class="form-check-label" for="Address-1">Ship to a different address?</label>
+                        </div>
+                        <div class="form-item">
+                            <textarea name="text" class="form-control" spellcheck="false" cols="30" rows="11"
+                                placeholder="Oreder Notes (Optional)"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-lg-6 col-xl-6 wow fadeInUp" data-wow-delay="0.3s">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr class="text-center">
+                                        <th scope="col" class="text-start">Name</th>
+                                        <th scope="col">Model</th>
+                                        <th scope="col">Price</th>
+                                        <th scope="col">Quantity</th>
+                                        <th scope="col">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Aquí el compañero usará v-for="item in carrito.items" para listar los productos reales -->
+                                    <tr class="text-center">
+                                        <th scope="row" class="text-start py-4">Apple iPad Mini</th>
+                                        <td class="py-4">G2356</td>
+                                        <td class="py-4">$269.00</td>
+                                        <td class="py-4 text-center">2</td>
+                                        <td class="py-4">$538.00</td>
+                                    </tr>
+                                    <!-- Fin de Fila de Ejemplo -->
+                                    <tr>
+                                        <th scope="row"></th>
+                                        <td class="py-4"></td>
+                                        <td class="py-4"></td>
+                                        <td class="py-4">
+                                            <p class="mb-0 text-dark py-2">Subtotal</p>
+                                        </td>
+                                        <td class="py-4">
+                                            <div class="py-2 text-center border-bottom border-top">
+                                                <p class="mb-0 text-dark">Bs {{ carrito.total > 0 ? carrito.total.toFixed(2) : '0.00' }}</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row"></th>
+                                        <td class="py-4">
+                                            <p class="mb-0 text-dark py-4">Shipping</p>
+                                        </td>
+                                        <td colspan="3" class="py-4">
+                                            <div class="form-check text-start">
+                                                <input type="checkbox" class="form-check-input bg-primary border-0"
+                                                    id="Shipping-1" name="Shipping-1" value="Shipping">
+                                                <label class="form-check-label" for="Shipping-1">Free Shipping</label>
+                                            </div>
+                                            <div class="form-check text-start">
+                                                <input type="checkbox" class="form-check-input bg-primary border-0"
+                                                    id="Shipping-2" name="Shipping-1" value="Shipping">
+                                                <label class="form-check-label" for="Shipping-2">Flat rate: $15.00</label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row"></th>
+                                        <td class="py-4">
+                                            <p class="mb-0 text-dark text-uppercase py-2">TOTAL</p>
+                                        </td>
+                                        <td class="py-4"></td>
+                                        <td class="py-4"></td>
+                                        <td class="py-4">
+                                            <div class="py-2 text-center border-bottom border-top">
+                                                <p class="mb-0 text-dark">Bs {{ carrito.total > 0 ? carrito.total.toFixed(2) : '0.00' }}</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="row g-0 text-center align-items-center justify-content-center border-bottom py-2">
+                            <div class="col-12">
+                                <div class="form-check text-start my-2">
+                                    <input type="checkbox" class="form-check-input bg-primary border-0" id="Transfer-1"
+                                        name="Transfer" value="Transfer">
+                                    <label class="form-check-label" for="Transfer-1">Direct Bank Transfer</label>
+                                </div>
+                                <p class="text-start text-dark">Make your payment directly into our bank account. Please
+                                    use your Order ID as the payment reference. Your order will not be shipped until the
+                                    funds have cleared in our account.</p>
+                            </div>
+                        </div>
+                        <div class="row g-4 text-center align-items-center justify-content-center border-bottom py-2">
+                            <div class="col-12">
+                                <div class="form-check text-start my-2">
+                                    <input type="checkbox" class="form-check-input bg-primary border-0" id="Payments-1"
+                                        name="Payments" value="Payments">
+                                    <label class="form-check-label" for="Payments-1">Check Payments</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-4 text-center align-items-center justify-content-center border-bottom py-2">
+                            <div class="col-12">
+                                <div class="form-check text-start my-2">
+                                    <input type="checkbox" class="form-check-input bg-primary border-0" id="Delivery-1"
+                                        name="Delivery" value="Delivery">
+                                    <label class="form-check-label" for="Delivery-1">Cash On Delivery</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-4 text-center align-items-center justify-content-center pt-4">
+                            <button type="button"
+                                class="btn btn-primary border-secondary py-3 px-4 text-uppercase w-100 text-primary">Place Order</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Checkout Page End -->
+  </div>
 </template>
-
-<style scoped>
-.checkout {
-  max-width: 850px;
-  margin: 40px auto;
-  padding: 25px;
-}
-
-h1,
-h2 {
-  color: #56336f;
-}
-
-.datos,
-.pago {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 3px 12px #00000015;
-}
-
-label {
-  display: block;
-  margin: 15px 0 8px;
-  font-weight: 600;
-}
-
-textarea,
-input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-
-textarea {
-  resize: vertical;
-}
-
-.producto {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  padding: 12px 0;
-  border-bottom: 1px solid #eee;
-}
-
-button {
-  margin-top: 20px;
-  padding: 12px 22px;
-  background: #6c3b91;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.error {
-  color: #c62828;
-}
-
-.pago {
-  text-align: center;
-}
-
-.pago img {
-  display: block;
-  width: 250px;
-  max-width: 100%;
-  margin: 20px auto;
-}
-
-.confirmacion {
-  padding: 20px;
-  background: #f5f0fa;
-  border-radius: 10px;
-}
-</style>

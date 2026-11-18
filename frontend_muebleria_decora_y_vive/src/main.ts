@@ -1,5 +1,3 @@
-import "./assets/main.css";
-
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 
@@ -7,7 +5,8 @@ import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
 import Aura from "@primeuix/themes/aura";
 import "primeicons/primeicons.css";
-import "primeflex/primeflex.css";
+// COMENTAMOS PRIMEFLEX: Causa conflictos con el sistema de grillas de Bootstrap de la plantilla Electro
+// import "primeflex/primeflex.css"; 
 
 // Componentes principales
 import App from "./App.vue";
@@ -25,6 +24,12 @@ app.use(router);
 app.use(PrimeVue, {
   theme: {
     preset: Aura,
+    options: {
+        cssLayer: {
+            name: 'primevue',
+            order: 'tailwind-base, primevue, tailwind-utilities'
+        }
+    }
   },
 });
 

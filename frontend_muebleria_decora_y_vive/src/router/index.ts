@@ -103,6 +103,22 @@ const router = createRouter({
       name: "registro",
       component: RegistroView,
     },
+
+    {
+      path: '/checkout',
+      name: 'checkout',
+      component: () => import('@/views/CheckoutView.vue'),
+    },
+    {
+      path: '/producto/:id?',
+      name: 'single-product',
+      component: () => import('@/views/SingleView.vue'),
+    },
+    {
+      path: '/bestseller',
+      name: 'bestseller',
+      component: () => import('@/views/BestsellerView.vue'),
+    },
   ],
 });
 
