@@ -22,13 +22,15 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
 
   routes: [
-    // MODULOS ADMINISTRATIVOS
+    // INICIO: Visible para ADMINISTRADOR y CLIENTE (requiere iniciar sesión)
     {
       path: "/",
       name: "home",
       component: HomeView,
-      meta: { rol: "ADMINISTRADOR" },
+      meta: { requiereAuth: true },
     },
+
+    // MODULOS ADMINISTRATIVOS (Solo ADMINISTRADOR)
     {
       path: "/categorias",
       name: "categorias",
@@ -72,7 +74,7 @@ const router = createRouter({
       meta: { rol: "ADMINISTRADOR" },
     },
 
-    // TIENDA Y CARRITO
+    // TIENDA, CARRITO Y VISTAS DEL TEMPLATE
     {
       path: "/tienda",
       name: "tienda",
@@ -82,6 +84,16 @@ const router = createRouter({
       path: "/carrito",
       name: "carrito",
       component: CarritoView,
+    },
+    {
+      path: "/producto/:id?",
+      name: "single-product",
+      component: () => import("@/views/SingleView.vue"),
+    },
+    {
+      path: "/bestseller",
+      name: "bestseller",
+      component: () => import("@/views/BestsellerView.vue"),
     },
 
     // FINALIZAR COMPRA: SOLO CLIENTES
@@ -103,22 +115,6 @@ const router = createRouter({
       name: "registro",
       component: RegistroView,
     },
-
-    {
-      path: '/checkout',
-      name: 'checkout',
-      component: () => import('@/views/CheckoutView.vue'),
-    },
-    {
-      path: '/producto/:id?',
-      name: 'single-product',
-      component: () => import('@/views/SingleView.vue'),
-    },
-    {
-      path: '/bestseller',
-      name: 'bestseller',
-      component: () => import('@/views/BestsellerView.vue'),
-    },
   ],
 });
 
@@ -127,27 +123,27 @@ router.beforeEach((to) => {
   const auth = useAuthStore();
 
   const rolRequerido = to.meta.rol as "ADMINISTRADOR" | "CLIENTE" | undefined;
+  const requiereAuth = Boolean(to.meta.requiereAuth);
 
-  // Verificar autenticacion y rol
+  // Si la ruta requiere solo estar logueado (ej. Home "/")
+  if (requiereAuth && !auth.autenticado) {
+    return { name: "login" };
+  }
+
+  // Verificar autenticacion y rol especifico
   if (rolRequerido) {
     if (!auth.autenticado) {
       return { name: "login" };
     }
 
     if (auth.usuario?.rol !== rolRequerido) {
-      if (auth.usuario?.rol === "ADMINISTRADOR") {
-        return { name: "home" };
-      }
-
-      return { name: "tienda" };
+      return { name: "home" };
     }
   }
 
   // Evitar volver al login si ya inicio sesion
   if ((to.name === "login" || to.name === "registro") && auth.autenticado) {
-    return auth.usuario?.rol === "ADMINISTRADOR"
-      ? { name: "home" }
-      : { name: "tienda" };
+    return { name: "home" };
   }
 
   return true;

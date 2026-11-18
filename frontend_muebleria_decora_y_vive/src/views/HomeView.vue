@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { onMounted } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { computed } from "vue";
 
 const router = useRouter();
+
+const auth = useAuthStore();
+const esAdministrador = computed(
+  () => auth.autenticado && auth.usuario?.rol === "ADMINISTRADOR",
+);
 
 // Lógica de módulos de tu compañero
 const modulos = [
@@ -251,7 +258,7 @@ onMounted(() => {
     <!-- Our Products End -->
 
     <!-- Módulos de Administración (Tu compañero) -->
-    <div class="container-fluid bg-light py-5">
+    <div v-if="esAdministrador" class="container-fluid bg-light py-5">
       <div class="container py-5">
         <div class="text-center mx-auto mb-5" style="max-width: 700px;">
           <h1 class="display-4">Panel de Administración</h1>
