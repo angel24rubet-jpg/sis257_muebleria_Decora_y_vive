@@ -17,6 +17,7 @@
   "dependencies": {
     "@primeuix/themes": "2.0.3",
     "axios": "^1.21.1",
+    "bootstrap": "^5.3.9",
     "pinia": "^4.0.3",
     "primeflex": "^4.0.0",
     "primeicons": "7.0.0",

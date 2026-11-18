@@ -2,8 +2,10 @@
 import { RouterView, RouterLink, useRouter } from "vue-router";
 import { computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
+import { useCarritoStore } from "@/stores/carrito";
 
 const auth = useAuthStore();
+const carrito = useCarritoStore();
 const router = useRouter();
 
 const esAdministrador = computed(
@@ -14,10 +16,7 @@ const esCliente = computed(
   () => auth.autenticado && auth.usuario?.rol === "CLIENTE",
 );
 
-const rutaInicio = computed(() => {
-  if (esAdministrador.value) return "/";
-  return "/tienda";
-});
+const rutaInicio = computed(() => (esAdministrador.value ? "/" : "/tienda"));
 
 function cerrarSesion() {
   auth.logout();
@@ -26,308 +25,362 @@ function cerrarSesion() {
 </script>
 
 <template>
-  <div class="d-flex flex-column min-vh-100">
-    <!-- 1. ENCABEZADO Y TOPBAR -->
-    <header>
-      <!-- Topbar Superior -->
-      <div class="container-fluid px-5 d-none border-bottom d-lg-block">
-        <div class="row gx-0 align-items-center">
-          <div class="col-lg-4 text-center text-lg-start mb-lg-0">
-            <div class="d-inline-flex align-items-center" style="height: 45px">
-              <RouterLink :to="rutaInicio" class="text-muted me-2">
-                Nosotros
-              </RouterLink>
-              <small> / </small>
-              <RouterLink :to="rutaInicio" class="text-muted mx-2">
-                Soporte
-              </RouterLink>
-              <small> / </small>
-              <RouterLink :to="rutaInicio" class="text-muted ms-2">
-                Contacto
-              </RouterLink>
-            </div>
-          </div>
+  <div class="sitio">
+    <div class="topbar" v-if="!esAdministrador">
+      <div class="contenedor topbar-contenido">
+        <span>Diseño y confort para tu hogar</span>
+        <span>Sucre, Bolivia · Atención personalizada</span>
+      </div>
+    </div>
 
-          <div
-            class="col-lg-4 text-center d-flex align-items-center justify-content-center"
+    <header class="encabezado">
+      <div class="contenedor cabecera-principal">
+        <RouterLink :to="rutaInicio" class="marca">
+          <span class="marca-icono">D</span>
+          <span>
+            <strong>DECORA Y VIVE</strong>
+            <small>MUEBLES & DECORACIÓN</small>
+          </span>
+        </RouterLink>
+
+        <nav class="navegacion" v-if="!esAdministrador">
+          <RouterLink to="/tienda">Inicio</RouterLink>
+          <RouterLink to="/tienda">Tienda</RouterLink>
+          <RouterLink to="/tienda">Colección</RouterLink>
+          <RouterLink to="/tienda">Novedades</RouterLink>
+        </nav>
+
+        <nav class="navegacion" v-else>
+          <RouterLink to="/">Administración</RouterLink>
+          <RouterLink to="/productos">Productos</RouterLink>
+          <RouterLink to="/pedidos">Pedidos</RouterLink>
+        </nav>
+
+        <div class="acciones-cabecera">
+          <RouterLink
+            v-if="!esAdministrador"
+            to="/carrito"
+            class="icono-carrito"
+            aria-label="Mi carrito"
           >
-            <small class="text-dark me-1">Teléfono:</small>
-            <a href="tel:+59177126603" class="text-muted"> +591 77126603 </a>
-          </div>
+            <i class="pi pi-shopping-bag"></i>
+            <span>{{ carrito.cantidadProductos }}</span>
+          </RouterLink>
 
-          <div class="col-lg-4 text-center text-lg-end">
-            <div class="d-inline-flex align-items-center" style="height: 45px">
-              <template v-if="auth.autenticado">
-                <span class="text-muted me-3">
-                  <i class="fa fa-user me-2"></i>
-                  {{ auth.usuario?.nombre_completo }}
-                </span>
+          <template v-if="auth.autenticado">
+            <span class="usuario">
+              {{ auth.usuario?.nombre_completo }}
+            </span>
+            <button class="btn-cuenta" @click="cerrarSesion">Salir</button>
+          </template>
 
-                <button
-                  class="btn btn-link text-muted p-0"
-                  @click="cerrarSesion"
-                >
-                  Cerrar sesión
-                </button>
-              </template>
-
-              <RouterLink v-else to="/login" class="text-muted ms-2">
-                <i class="fa fa-user me-2"></i>
-                Mi Cuenta / Acceso
-              </RouterLink>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Barra de marca, buscador y carrito -->
-      <div class="container-fluid px-5 py-4 d-none d-lg-block">
-        <div class="row gx-0 align-items-center text-center">
-          <div class="col-md-4 col-lg-4 text-center text-lg-start">
-            <RouterLink :to="rutaInicio" class="navbar-brand p-0">
-              <h1 class="h2 text-primary m-0 fw-bold">
-                <i class="fas fa-couch text-secondary me-2"></i>
-                Decora y Vive
-              </h1>
-            </RouterLink>
-          </div>
-
-          <div class="col-md-4 col-lg-5 text-center">
-            <div class="position-relative ps-4">
-              <div class="d-flex border rounded-pill">
-                <input
-                  class="form-control border-0 rounded-pill w-100 py-3"
-                  type="text"
-                  placeholder="¿Qué mueble buscas?"
-                />
-
-                <button
-                  type="button"
-                  class="btn btn-primary rounded-pill py-3 px-5"
-                  style="border: 0"
-                >
-                  <i class="fas fa-search"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-4 col-lg-3 text-center text-lg-end">
-            <div class="d-inline-flex align-items-center">
-              <RouterLink
-                to="/carrito"
-                class="text-muted d-flex align-items-center justify-content-center text-decoration-none"
-              >
-                <span class="rounded-circle btn-md-square border">
-                  <i class="fas fa-shopping-cart"></i>
-                </span>
-                <span class="text-dark ms-2 fw-bold">Carrito</span>
-              </RouterLink>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Barra de navegación principal -->
-      <div class="container-fluid nav-bar p-0">
-        <div class="row gx-0 bg-primary px-5 align-items-center">
-          <div class="col-12">
-            <nav class="navbar navbar-expand-lg navbar-light bg-primary">
-              <RouterLink
-                :to="rutaInicio"
-                class="navbar-brand d-block d-lg-none"
-              >
-                <h1 class="h3 text-white m-0">Decora y Vive</h1>
-              </RouterLink>
-
-              <button
-                class="navbar-toggler ms-auto"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarCollapse"
-              >
-                <span class="fa fa-bars fa-1x text-white"></span>
-              </button>
-
-              <div class="collapse navbar-collapse" id="navbarCollapse">
-                <!-- MENU ADMINISTRADOR -->
-                <div v-if="esAdministrador" class="navbar-nav me-auto py-0">
-                  <RouterLink
-                    to="/"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Inicio
-                  </RouterLink>
-
-                  <RouterLink
-                    to="/productos"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Productos
-                  </RouterLink>
-
-                  <RouterLink
-                    to="/categorias"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Categorías
-                  </RouterLink>
-
-                  <RouterLink
-                    to="/colores"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Colores
-                  </RouterLink>
-
-                  <RouterLink
-                    to="/clientes"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Clientes
-                  </RouterLink>
-
-                  <RouterLink
-                    to="/ventas"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Ventas
-                  </RouterLink>
-
-                  <RouterLink
-                    to="/reportes"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Reportes
-                  </RouterLink>
-
-                  <RouterLink
-                    to="/pedidos"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Pedidos
-                  </RouterLink>
-                </div>
-
-                <!-- MENU CLIENTE -->
-                <div v-else-if="esCliente" class="navbar-nav me-auto py-0">
-                  <RouterLink
-                    to="/tienda"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Tienda
-                  </RouterLink>
-
-                  <RouterLink
-                    to="/carrito"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Mi carrito
-                  </RouterLink>
-                </div>
-
-                <!-- MENU VISITANTE -->
-                <div v-else class="navbar-nav me-auto py-0">
-                  <RouterLink
-                    to="/tienda"
-                    class="nav-item nav-link"
-                    active-class="active"
-                  >
-                    Tienda
-                  </RouterLink>
-
-                  <RouterLink to="/login" class="nav-item nav-link">
-                    Iniciar sesión
-                  </RouterLink>
-
-                  <RouterLink to="/registro" class="nav-item nav-link">
-                    Registrarse
-                  </RouterLink>
-                </div>
-
-                <a
-                  href="tel:+59177126603"
-                  class="btn btn-secondary rounded-pill py-2 px-4"
-                >
-                  <i class="fa fa-phone-alt me-2"></i>
-                  +591 77126603
-                </a>
-              </div>
-            </nav>
-          </div>
+          <template v-else>
+            <RouterLink to="/login" class="btn-cuenta"> Mi cuenta </RouterLink>
+          </template>
         </div>
       </div>
     </header>
 
-    <!-- 2. VISTA DINÁMICA -->
-    <main class="flex-grow-1">
+    <main class="contenido">
       <RouterView />
     </main>
 
-    <!-- 3. FOOTER GLOBAL -->
-    <footer class="container-fluid footer py-5 bg-dark text-white-50 mt-auto">
-      <div class="container py-5">
-        <div
-          class="row g-4 rounded mb-5 p-4"
-          style="background: rgba(255, 255, 255, 0.03)"
-        >
-          <div class="col-md-6 col-lg-4">
-            <div class="d-flex align-items-center">
-              <i class="fas fa-map-marker-alt fa-2x text-primary me-3"></i>
-              <div>
-                <h5 class="text-white mb-1">Ubicación</h5>
-                <p class="mb-0">Sucre, Bolivia</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4">
-            <div class="d-flex align-items-center">
-              <i class="fas fa-envelope fa-2x text-primary me-3"></i>
-              <div>
-                <h5 class="text-white mb-1">Email</h5>
-                <p class="mb-0">coa.veliz.diegoarmando@usfx.bo</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-6 col-lg-4">
-            <div class="d-flex align-items-center">
-              <i class="fa fa-phone-alt fa-2x text-primary me-3"></i>
-              <div>
-                <h5 class="text-white mb-1">Teléfono</h5>
-                <p class="mb-0">+591 77126603</p>
-              </div>
-            </div>
-          </div>
+    <footer class="footer" v-if="!esAdministrador">
+      <div class="contenedor footer-contenido">
+        <div class="footer-marca">
+          <strong>DECORA Y VIVE</strong>
+          <p>Transformamos espacios en lugares especiales.</p>
         </div>
 
-        <div class="text-center pb-3">
-          <small>
-            &copy; 2026 Mueblería Decora y Vive. Todos los derechos reservados.
-          </small>
+        <div>
+          <strong>Explora</strong>
+          <RouterLink to="/tienda">Tienda</RouterLink>
+          <RouterLink to="/carrito">Mi carrito</RouterLink>
         </div>
+
+        <div>
+          <strong>Atención al cliente</strong>
+          <a href="tel:+59177126603">+591 77126603</a>
+          <span>Sucre, Bolivia</span>
+        </div>
+      </div>
+
+      <div class="copyright">
+        © 2026 Mueblería Decora y Vive. Todos los derechos reservados.
       </div>
     </footer>
   </div>
 </template>
 
 <style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap");
+
+:root {
+  font-family: "DM Sans", sans-serif;
+  color: #302a25;
+  background: #faf8f4;
+  --cafe: #49382e;
+  --dorado: #ad8960;
+  --crema: #f5f0e8;
+  --texto: #302a25;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #faf8f4;
+}
+
 #app {
-  max-width: 100% !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
+}
+
+.sitio {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.contenedor {
+  width: min(1240px, 92%);
+  margin: auto;
+}
+
+.sitio .topbar {
+  background-color: #49382e !important;
+  color: #f5f0e8;
+  font-size: 12px;
+  padding: 11px 0;
+  letter-spacing: 0.3px;
+}
+
+.topbar-contenido {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.encabezado {
+  background: #fff;
+  border-bottom: 1px solid #eee8df;
+  position: relative;
+  z-index: 5;
+}
+
+.cabecera-principal {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--cafe);
+  flex-shrink: 0;
+}
+
+.marca-icono {
+  width: 43px;
+  height: 43px;
+  border: 1px solid var(--dorado);
+  display: grid;
+  place-items: center;
+  font-family: "Playfair Display", serif;
+  font-size: 27px;
+  color: var(--dorado);
+}
+
+.marca strong,
+.footer-marca strong {
+  display: block;
+  letter-spacing: 2px;
+  font-size: 16px;
+}
+
+.marca small {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 2.2px;
+  margin-top: 5px;
+}
+
+.navegacion {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.navegacion a {
+  color: #554b43;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.navegacion a:hover,
+.navegacion a.router-link-active {
+  color: var(--dorado);
+}
+
+.acciones-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+}
+
+.icono-carrito {
+  position: relative;
+  color: var(--cafe);
+  font-size: 21px;
+  text-decoration: none;
+}
+
+.icono-carrito span {
+  position: absolute;
+  top: -10px;
+  right: -12px;
+  background: var(--dorado);
+  color: white;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+}
+
+.btn-cuenta {
+  background: var(--cafe);
+  color: white;
+  padding: 11px 19px;
+  border: 1px solid var(--cafe);
+  border-radius: 2px;
+  text-decoration: none;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-cuenta:hover {
+  background: var(--dorado);
+  border-color: var(--dorado);
+  color: white;
+}
+
+.usuario {
+  font-size: 12px;
+  color: var(--cafe);
+}
+
+.contenido {
+  flex: 1;
+}
+
+.footer {
+  background: #302820;
+  color: #e6ddd1;
+  padding-top: 55px;
+}
+
+.footer-contenido {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 40px;
+  padding-bottom: 40px;
+}
+
+.footer-contenido > div {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.footer-contenido strong {
+  color: #fff;
+  margin-bottom: 5px;
+}
+
+.footer-contenido p {
+  color: #c2b6a8;
+}
+
+.footer-contenido a {
+  color: #c2b6a8;
+  text-decoration: none;
+}
+
+.copyright {
+  text-align: center;
+  border-top: 1px solid #51463b;
+  padding: 18px;
+  font-size: 11px;
+  color: #c2b6a8;
+}
+
+@media (max-width: 850px) {
+  .cabecera-principal {
+    flex-wrap: wrap;
+    padding: 17px 0;
+    gap: 18px;
+  }
+
+  .navegacion {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    gap: 22px;
+    padding: 10px 0;
+  }
+
+  .acciones-cabecera {
+    margin-left: auto;
+  }
+
+  .usuario {
+    display: none;
+  }
+
+  .footer-contenido {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footer-marca {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-contenido {
+    justify-content: center;
+  }
+
+  .topbar-contenido span:last-child {
+    display: none;
+  }
+
+  .marca strong {
+    font-size: 13px;
+  }
+
+  .footer-contenido {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-marca {
+    grid-column: auto;
+  }
 }
 </style>
