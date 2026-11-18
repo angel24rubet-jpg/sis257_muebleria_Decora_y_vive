@@ -1,34 +1,56 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { PedidosService } from './pedidos.service';
-import { CreatePedidoDto } from './dto/create-pedido.dto';
-import { UpdatePedidoDto } from './dto/update-pedido.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  ParseIntPipe,
+  Req,
+  UseGuards,
+  ForbiddenException,
+} from "@nestjs/common";
 
-@Controller('pedidos')
+import { PedidosService } from "./pedidos.service";
+import { CreatePedidoDto } from "./dto/create-pedido.dto";
+
+import { JwtAuthGuard } from "../auth/guards/jwt-auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles/roles.guard";
+
+@Controller("pedidos")
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PedidosController {
   constructor(private readonly pedidosService: PedidosService) {}
 
+  // Crear pedido: cliente autenticado
   @Post()
-  create(@Body() createPedidoDto: CreatePedidoDto) {
-    return this.pedidosService.create(createPedidoDto);
+  crear(@Body() dto: CreatePedidoDto, @Req() req: any) {
+    return this.pedidosService.crear(req.user.id_usuario, dto);
   }
 
+  // Listar pedidos: administrador ve todos, cliente solo los suyos
   @Get()
-  findAll() {
-    return this.pedidosService.findAll();
+  listar(@Req() req: any) {
+    if (req.user.rol === "ADMINISTRADOR") {
+      return this.pedidosService.listarTodos();
+    }
+
+    return this.pedidosService.listarPorUsuario(req.user.id_usuario);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pedidosService.findOne(+id);
-  }
+  // Buscar pedido por ID
+  @Get(":id")
+  async buscarPorId(@Param("id", ParseIntPipe) id: number, @Req() req: any) {
+    const pedido = await this.pedidosService.buscarPorId(id);
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePedidoDto: UpdatePedidoDto) {
-    return this.pedidosService.update(+id, updatePedidoDto);
-  }
+    if (
+      req.user.rol !== "ADMINISTRADOR" &&
+      pedido.usuario.id_usuario !== req.user.id_usuario
+    ) {
+      throw new ForbiddenException(
+        "No tienes permiso para consultar este pedido",
+      );
+    }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.pedidosService.remove(+id);
+    return pedido;
   }
 }
