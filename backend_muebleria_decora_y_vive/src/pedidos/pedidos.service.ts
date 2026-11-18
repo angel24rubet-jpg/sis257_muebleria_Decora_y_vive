@@ -36,11 +36,10 @@ export class PedidosService {
 
       for (const detalle of dto.detalles) {
         const productoColor = await manager
-          .getRepository(ProductoColor)
-          .createQueryBuilder("pc")
+          .createQueryBuilder(ProductoColor, "pc")
+          .setLock("pessimistic_write", undefined, ["pc"])
           .leftJoinAndSelect("pc.producto", "producto")
           .leftJoinAndSelect("pc.color", "color")
-          .setLock("pessimistic_write")
           .where("pc.id_producto_color = :id", {
             id: detalle.id_producto_color,
           })
@@ -168,21 +167,22 @@ export class PedidosService {
     dto: CreatePagoPedidoDto,
   ) {
     return this.dataSource.transaction(async (manager) => {
-      const pedido = await manager.findOne(Pedido, {
-        where: {
-          id_pedido,
-          usuario: { id_usuario },
-        },
-        relations: {
-          usuario: true,
-          pagos: true,
-        },
-        lock: { mode: "pessimistic_write" },
-      });
+      const pedido = await manager
+        .createQueryBuilder(Pedido, "pedido")
+        .setLock("pessimistic_write", undefined, ["pedido"])
+        .where("pedido.id_pedido = :id_pedido", { id_pedido })
+        .andWhere("pedido.id_usuario = :id_usuario", { id_usuario })
+        .getOne();
 
       if (!pedido) {
         throw new NotFoundException("Pedido no encontrado");
       }
+
+      pedido.pagos = await manager.find(PagoPedido, {
+        where: {
+          pedido: { id_pedido: pedido.id_pedido },
+        },
+      });
 
       if (pedido.estado_pago === "PAGADO") {
         throw new BadRequestException("Este pedido ya está pagado");

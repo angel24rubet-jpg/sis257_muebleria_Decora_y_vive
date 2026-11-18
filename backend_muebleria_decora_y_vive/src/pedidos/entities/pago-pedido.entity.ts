@@ -22,8 +22,8 @@ export class PagoPedido {
   @JoinColumn({ name: "id_pedido" })
   pedido: Pedido;
 
-  @Column({ type: "varchar", length: 100 })
-  nombre_pagador: string;
+  @Column({ type: "varchar", length: 100, nullable: true })
+  nombre_pagador: string | null;
 
   // Imagen del comprobante de pago
   @Column({ type: "varchar", length: 500, nullable: true })

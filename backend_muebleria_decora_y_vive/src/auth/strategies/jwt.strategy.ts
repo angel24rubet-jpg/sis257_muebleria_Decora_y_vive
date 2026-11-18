@@ -1,22 +1,23 @@
-
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { ExtractJwt, Strategy } from "passport-jwt";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey:
-        process.env.JWT_SECRET || 'clave-temporal-solo-desarrollo',
+        configService.get<string>("JWT_SECRET") ||
+        "clave-temporal-solo-desarrollo",
     });
   }
 
   async validate(payload: any) {
     if (!payload.sub || !payload.rol) {
-      throw new UnauthorizedException('Token no valido');
+      throw new UnauthorizedException("Token no valido");
     }
 
     return {

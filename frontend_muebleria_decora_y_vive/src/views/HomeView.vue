@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { useRouter, RouterLink } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
 
 const router = useRouter();
+const auth = useAuthStore();
 
 // Modulos administrativos
 const modulos = [
@@ -12,7 +14,6 @@ const modulos = [
   { nombre: "Ventas", icono: "pi pi-shopping-cart", ruta: "/ventas" },
   { nombre: "Reportes", icono: "pi pi-chart-bar", ruta: "/reportes" },
   { nombre: "Pedidos", icono: "pi pi-truck", ruta: "/pedidos" },
-  { nombre: "Compras", icono: "pi pi-shopping-bag", ruta: "/compras" },
 ];
 
 const abrirModulo = (ruta: string) => {
@@ -33,7 +34,7 @@ const abrirModulo = (ruta: string) => {
                 <img
                   src="/img/carousel-1.png"
                   class="img-fluid hero-imagen"
-                  alt="Sofá destacado"
+                  alt="Sofa destacado"
                 />
               </div>
 
@@ -47,7 +48,7 @@ const abrirModulo = (ruta: string) => {
                 </h1>
 
                 <p class="text-muted">
-                  Descubre nuestra nueva colección de salas y comedores
+                  Descubre nuestra nueva coleccion de salas y comedores
                   modernos.
                 </p>
 
@@ -55,7 +56,7 @@ const abrirModulo = (ruta: string) => {
                   to="/productos"
                   class="btn btn-primary rounded-pill py-3 px-5"
                 >
-                  Ver Catálogo
+                  Ver Catalogo
                 </RouterLink>
               </div>
             </div>
@@ -84,7 +85,7 @@ const abrirModulo = (ruta: string) => {
             </div>
 
             <div class="carousel-banner text-center">
-              <h4 class="text-white mb-2">Comedor Nórdico</h4>
+              <h4 class="text-white mb-2">Comedor Nordico</h4>
 
               <p
                 class="text-primary fs-4 fw-bold bg-white d-inline-block px-3 rounded"
@@ -113,23 +114,23 @@ const abrirModulo = (ruta: string) => {
         <div class="col-6 col-md-3 border-end p-4 d-flex align-items-center">
           <i class="fa fa-sync-alt fa-2x text-primary me-3"></i>
           <div>
-            <h6 class="text-uppercase mb-1 text-dark">Garantía Total</h6>
-            <small class="text-muted">30 días de satisfacción</small>
+            <h6 class="text-uppercase mb-1 text-dark">Garantia Total</h6>
+            <small class="text-muted">30 dias de satisfaccion</small>
           </div>
         </div>
 
         <div class="col-6 col-md-3 border-end p-4 d-flex align-items-center">
           <i class="fas fa-truck fa-2x text-primary me-3"></i>
           <div>
-            <h6 class="text-uppercase mb-1 text-dark">Envío Rápido</h6>
-            <small class="text-muted">A todo el país</small>
+            <h6 class="text-uppercase mb-1 text-dark">Envio Rapido</h6>
+            <small class="text-muted">A todo el pais</small>
           </div>
         </div>
 
         <div class="col-6 col-md-3 border-end p-4 d-flex align-items-center">
           <i class="fas fa-headset fa-2x text-primary me-3"></i>
           <div>
-            <h6 class="text-uppercase mb-1 text-dark">Atención 24/7</h6>
+            <h6 class="text-uppercase mb-1 text-dark">Atencion 24/7</h6>
             <small class="text-muted">Soporte personalizado</small>
           </div>
         </div>
@@ -145,10 +146,14 @@ const abrirModulo = (ruta: string) => {
     </section>
 
     <!-- MODULOS ADMINISTRATIVOS -->
-    <main class="modulos-contenedor py-5 bg-light" id="modulos-admin">
+    <main
+      v-if="auth.autenticado && auth.usuario?.rol === 'ADMINISTRADOR'"
+      class="modulos-contenedor py-5 bg-light"
+      id="modulos-admin"
+    >
       <div class="container-fluid px-4 text-center">
         <h2 class="mb-4 border-bottom pb-2 d-inline-block text-dark">
-          Módulos Administrativos
+          Modulos Administrativos
         </h2>
 
         <div class="modulos">
@@ -164,11 +169,25 @@ const abrirModulo = (ruta: string) => {
         </div>
       </div>
     </main>
+
+    <!-- ACCESO PARA CLIENTES -->
+    <section
+      v-else-if="auth.autenticado && auth.usuario?.rol === 'CLIENTE'"
+      class="container py-5 text-center"
+    >
+      <h2>Bienvenido a Decora y Vive</h2>
+      <p class="text-muted">
+        Explora nuestro catalogo y encuentra los muebles ideales para tu hogar.
+      </p>
+
+      <RouterLink to="/tienda" class="btn btn-primary rounded-pill px-5 py-3">
+        Ir a la tienda
+      </RouterLink>
+    </section>
   </div>
 </template>
 
 <style scoped>
-/* Ocupar todo el ancho disponible */
 .home-page {
   width: 100%;
   max-width: none;
@@ -177,7 +196,6 @@ const abrirModulo = (ruta: string) => {
   overflow-x: hidden;
 }
 
-/* Hero principal */
 .hero-principal {
   width: 100%;
   min-height: 475px;
@@ -192,7 +210,6 @@ const abrirModulo = (ruta: string) => {
   object-fit: contain;
 }
 
-/* Banner lateral */
 .carousel-header-banner {
   width: 100%;
   height: 100%;
@@ -225,7 +242,6 @@ const abrirModulo = (ruta: string) => {
   z-index: 2;
 }
 
-/* Modulos administrativos */
 .modulos-contenedor {
   width: 100%;
   min-height: 40vh;
@@ -274,7 +290,6 @@ const abrirModulo = (ruta: string) => {
   color: #ffffff;
 }
 
-/* Adaptacion para tablets */
 @media (max-width: 991px) {
   .hero-principal {
     min-height: 400px;
@@ -293,7 +308,6 @@ const abrirModulo = (ruta: string) => {
   }
 }
 
-/* Adaptacion para celulares */
 @media (max-width: 575px) {
   .hero-principal {
     padding: 20px;

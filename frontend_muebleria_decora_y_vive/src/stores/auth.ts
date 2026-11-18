@@ -10,20 +10,31 @@ interface Usuario {
   rol: "ADMINISTRADOR" | "CLIENTE";
 }
 
+function obtenerUsuario(): Usuario | null {
+  try {
+    const datos = localStorage.getItem("usuario");
+
+    if (!datos || datos === "undefined" || datos === "null") {
+      return null;
+    }
+
+    return JSON.parse(datos);
+  } catch {
+    localStorage.removeItem("usuario");
+    return null;
+  }
+}
+
 export const useAuthStore = defineStore("auth", () => {
-  const usuario = ref<Usuario | null>(
-    JSON.parse(localStorage.getItem("usuario") || "null"),
-  );
-
+  const usuario = ref<Usuario | null>(obtenerUsuario());
   const token = ref<string | null>(localStorage.getItem("token"));
-
-  const autenticado = ref(!!token.value);
+  const autenticado = ref(!!token.value && !!usuario.value);
 
   async function login(datos: { usuario: string; password: string }) {
     const respuesta = await api.post("/auth/login", datos);
 
     token.value = respuesta.data.access_token;
-    usuario.value = respuesta.data.user;
+    usuario.value = respuesta.data.usuario;
     autenticado.value = true;
 
     localStorage.setItem("token", token.value!);
@@ -60,7 +71,7 @@ export const useAuthStore = defineStore("auth", () => {
     token,
     autenticado,
     login,
-    logout,
     registrar,
+    logout,
   };
 });
