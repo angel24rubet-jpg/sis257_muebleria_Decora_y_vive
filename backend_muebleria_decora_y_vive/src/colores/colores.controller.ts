@@ -7,36 +7,45 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from "@nestjs/common";
 
 import { ColoresService } from "./colores.service";
 import { CreateColorDto } from "./dto/create-color.dto";
 import { UpdateColorDto } from "./dto/update-color.dto";
 
+import { JwtAuthGuard } from "../auth/guards/jwt-auth/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles/roles.guard";
+import { Roles } from "../auth/decorators/roles.decorator";
+
 @Controller("colores")
 export class ColoresController {
   constructor(private readonly coloresService: ColoresService) {}
 
-  // Registrar un color
+  // Registrar color: solo administrador
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("ADMINISTRADOR")
   create(@Body() createColorDto: CreateColorDto) {
     return this.coloresService.create(createColorDto);
   }
 
-  // Listar todos los colores
+  // Listar colores: publico
   @Get()
   findAll() {
     return this.coloresService.findAll();
   }
 
-  // Buscar un color por ID
+  // Buscar color: publico
   @Get(":id")
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.coloresService.findOne(id);
   }
 
-  // Actualizar un color
+  // Actualizar color: solo administrador
   @Patch(":id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("ADMINISTRADOR")
   update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateColorDto: UpdateColorDto,
@@ -44,14 +53,19 @@ export class ColoresController {
     return this.coloresService.update(id, updateColorDto);
   }
 
-  // Eliminar un color
+  // Eliminar color: solo administrador
   @Delete(":id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("ADMINISTRADOR")
   remove(@Param("id", ParseIntPipe) id: number) {
     return this.coloresService.remove(id);
   }
-  // Activar o desactivar un color
+
+  // Activar o desactivar color: solo administrador
   @Patch(":id/estado")
-  cambiarEstado(@Param("id") id: string) {
-    return this.coloresService.cambiarEstado(+id);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("ADMINISTRADOR")
+  cambiarEstado(@Param("id", ParseIntPipe) id: number) {
+    return this.coloresService.cambiarEstado(id);
   }
 }

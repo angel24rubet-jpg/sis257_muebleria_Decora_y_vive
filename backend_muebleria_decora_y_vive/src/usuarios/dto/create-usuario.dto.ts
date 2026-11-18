@@ -1,10 +1,10 @@
+
 import {
   IsString,
   IsNotEmpty,
   IsEmail,
   MaxLength,
   MinLength,
-  IsIn,
 } from 'class-validator';
 
 export class CreateUsuarioDto {
@@ -33,12 +33,4 @@ export class CreateUsuarioDto {
     message: 'La contrasena debe tener al menos 8 caracteres',
   })
   password: string;
-
-  // Rol del usuario
-  @IsString()
-  @IsNotEmpty()
-  @IsIn(['ADMINISTRADOR', 'VENDEDOR'], {
-    message: 'El rol seleccionado no es valido',
-  })
-  rol: string;
 }

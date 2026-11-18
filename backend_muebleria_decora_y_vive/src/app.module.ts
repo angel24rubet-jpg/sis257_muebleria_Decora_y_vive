@@ -11,6 +11,8 @@ import { ClientesModule } from './clientes/clientes.module';
 import { VentasModule } from './ventas/ventas.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { ReportesModule } from './reportes/reportes.module';
+import { AuthModule } from './auth/auth.module';
+import { PedidosModule } from './pedidos/pedidos.module';
 
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
@@ -39,6 +41,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     VentasModule,
     UsuariosModule,
     ReportesModule,
+    AuthModule,
+    PedidosModule,
     
   ],
   controllers: [AppController],
