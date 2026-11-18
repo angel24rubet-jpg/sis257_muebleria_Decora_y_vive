@@ -122,7 +122,10 @@ export class PedidosService {
       relations: {
         usuario: true,
         detalles: {
-          productoColor: true,
+          productoColor: {
+            producto: true,
+            color: true,
+          },
         },
         pagos: true,
       },
@@ -135,7 +138,10 @@ export class PedidosService {
       where: { usuario: { id_usuario } },
       relations: {
         detalles: {
-          productoColor: true,
+          productoColor: {
+            producto: true,
+            color: true,
+          },
         },
         pagos: true,
       },
@@ -149,7 +155,10 @@ export class PedidosService {
       relations: {
         usuario: true,
         detalles: {
-          productoColor: true,
+          productoColor: {
+            producto: true,
+            color: true,
+          },
         },
         pagos: true,
       },
@@ -161,6 +170,7 @@ export class PedidosService {
 
     return pedido;
   }
+
   async registrarComprobante(
     id_pedido: number,
     id_usuario: number,
