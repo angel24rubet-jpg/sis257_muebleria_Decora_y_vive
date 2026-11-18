@@ -12,6 +12,9 @@ import LoginView from "../views/LoginView.vue";
 import RegistroView from "../views/RegistroView.vue";
 
 import { useAuthStore } from "@/stores/auth";
+import TiendaView from "../views/TiendaView.vue";
+import CarritoView from "../views/CarritoView.vue";
+import CheckoutView from "../views/CheckoutView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +64,22 @@ const router = createRouter({
       path: "/registro",
       name: "registro",
       component: RegistroView,
+    },
+    {
+      path: "/tienda",
+      name: "tienda",
+      component: TiendaView,
+    },
+    {
+      path: "/carrito",
+      name: "carrito",
+      component: CarritoView,
+    },
+    {
+      path: "/checkout",
+      name: "checkout",
+      component: CheckoutView,
+      meta: { requiresAuth: true, rol: "CLIENTE" },
     },
   ],
 });

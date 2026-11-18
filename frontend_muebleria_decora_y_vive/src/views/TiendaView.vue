@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { listarProductos } from "@/services/productos.service";
+import { listarProductos } from "@/services/productoService";
 import { useCarritoStore } from "@/stores/carrito";
 
 const carrito = useCarritoStore();

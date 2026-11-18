@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 
 interface ProductoCarrito {
   id_producto_color: number;
@@ -13,17 +13,24 @@ interface ProductoCarrito {
 }
 
 export const useCarritoStore = defineStore("carrito", () => {
-  const productos = ref<ProductoCarrito[]>([]);
+  const productos = ref<ProductoCarrito[]>(
+    JSON.parse(localStorage.getItem("carrito") || "[]"),
+  );
 
   const total = computed(() =>
-    productos.value.reduce(
-      (suma, producto) => suma + producto.precio * producto.cantidad,
-      0,
-    ),
+    productos.value.reduce((suma, p) => suma + p.precio * p.cantidad, 0),
   );
 
   const cantidadProductos = computed(() =>
-    productos.value.reduce((suma, producto) => suma + producto.cantidad, 0),
+    productos.value.reduce((suma, p) => suma + p.cantidad, 0),
+  );
+
+  watch(
+    productos,
+    (nuevosProductos) => {
+      localStorage.setItem("carrito", JSON.stringify(nuevosProductos));
+    },
+    { deep: true },
   );
 
   function agregar(producto: ProductoCarrito) {
@@ -43,6 +50,20 @@ export const useCarritoStore = defineStore("carrito", () => {
     }
   }
 
+  function disminuir(id_producto_color: number) {
+    const producto = productos.value.find(
+      (p) => p.id_producto_color === id_producto_color,
+    );
+
+    if (!producto) return;
+
+    if (producto.cantidad > 1) {
+      producto.cantidad--;
+    } else {
+      quitar(id_producto_color);
+    }
+  }
+
   function quitar(id_producto_color: number) {
     productos.value = productos.value.filter(
       (p) => p.id_producto_color !== id_producto_color,
@@ -58,6 +79,7 @@ export const useCarritoStore = defineStore("carrito", () => {
     total,
     cantidadProductos,
     agregar,
+    disminuir,
     quitar,
     vaciar,
   };

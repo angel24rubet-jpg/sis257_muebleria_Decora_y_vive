@@ -193,6 +193,7 @@ export class PedidosService {
       );
 
       if (pagoRechazado) {
+        pagoRechazado.nombre_pagador = dto.nombre_pagador;
         pagoRechazado.comprobante = dto.comprobante;
         pagoRechazado.estado_pago = "EN_REVISION";
         pagoRechazado.observacion = "";
@@ -215,6 +216,7 @@ export class PedidosService {
         );
       }
 
+      pagoPendiente.nombre_pagador = dto.nombre_pagador;
       pagoPendiente.comprobante = dto.comprobante;
       pagoPendiente.estado_pago = "EN_REVISION";
       pedido.estado_pago = "EN_REVISION";
