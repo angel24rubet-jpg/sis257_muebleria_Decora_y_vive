@@ -290,25 +290,21 @@ export class PedidosService {
     esAdministrador: boolean,
   ) {
     return this.dataSource.transaction(async (manager) => {
-      const pedido = await manager.findOne(Pedido, {
-        where: { id_pedido },
-        relations: {
-          usuario: true,
-          detalles: {
-            productoColor: true,
-          },
-        },
-        lock: { mode: "pessimistic_write" },
-      });
+      if (!esAdministrador) {
+        throw new BadRequestException(
+          "Solo el administrador puede cancelar pedidos",
+        );
+      }
+
+      // Bloquear el pedido para evitar cancelaciones duplicadas
+      const pedido = await manager
+        .createQueryBuilder(Pedido, "pedido")
+        .setLock("pessimistic_write", undefined, ["pedido"])
+        .where("pedido.id_pedido = :id_pedido", { id_pedido })
+        .getOne();
 
       if (!pedido) {
         throw new NotFoundException("Pedido no encontrado");
-      }
-
-      if (!esAdministrador && pedido.usuario.id_usuario !== id_usuario) {
-        throw new BadRequestException(
-          "No tienes permiso para cancelar este pedido",
-        );
       }
 
       if (
@@ -321,24 +317,40 @@ export class PedidosService {
       }
 
       if (pedido.estado_pago === "PAGADO") {
+        throw new BadRequestException("No se puede cancelar un pedido pagado");
+      }
+
+      // Consultar los detalles del pedido
+      const detalles = await manager.find(DetallePedido, {
+        where: { pedido: { id_pedido } },
+        relations: { productoColor: true },
+      });
+
+      if (detalles.length === 0) {
         throw new BadRequestException(
-          "Un pedido pagado requiere gestionar primero su devolución",
+          "El pedido no tiene productos para devolver",
         );
       }
 
-      for (const detalle of pedido.detalles) {
+      // Devolver el stock
+      for (const detalle of detalles) {
+        const idProductoColor = detalle.productoColor?.id_producto_color;
+
+        if (!idProductoColor) {
+          throw new NotFoundException("No se encontró el producto del pedido");
+        }
+
         const productoColor = await manager
-          .getRepository(ProductoColor)
-          .createQueryBuilder("pc")
-          .setLock("pessimistic_write")
+          .createQueryBuilder(ProductoColor, "pc")
+          .setLock("pessimistic_write", undefined, ["pc"])
           .where("pc.id_producto_color = :id", {
-            id: detalle.productoColor.id_producto_color,
+            id: idProductoColor,
           })
           .getOne();
 
         if (!productoColor) {
           throw new NotFoundException(
-            "No se encontró una combinación de producto y color",
+            "No se encontró el producto en el inventario",
           );
         }
 
@@ -353,7 +365,6 @@ export class PedidosService {
 
       return {
         mensaje: "Pedido cancelado y stock devuelto correctamente",
-        observacion: dto.observacion ?? "",
         pedido,
       };
     });

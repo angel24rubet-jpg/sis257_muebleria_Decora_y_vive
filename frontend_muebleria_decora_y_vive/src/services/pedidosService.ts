@@ -30,3 +30,10 @@ export const actualizarEstadoPedido = async (
   });
   return respuesta.data;
 };
+
+export const cancelarPedido = async (id: number, observacion: string) => {
+  const respuesta = await api.patch(`/pedidos/${id}/cancelar`, {
+    observacion,
+  });
+  return respuesta.data;
+};

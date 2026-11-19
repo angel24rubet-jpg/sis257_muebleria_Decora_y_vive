@@ -4,6 +4,7 @@ import {
   listarPedidos,
   verificarPago,
   actualizarEstadoPedido,
+  cancelarPedido,
 } from "@/services/pedidosService";
 
 const pedidos = ref<any[]>([]);
@@ -38,12 +39,12 @@ async function revisarPago(idPago: number, estado: "PAGADO" | "RECHAZADO") {
       observacion,
     });
 
+    await cargarPedidos();
+
     mensaje.value =
       estado === "PAGADO"
         ? "Pago aprobado correctamente."
         : "Pago rechazado correctamente.";
-
-    await cargarPedidos();
   } catch (e: any) {
     error.value = e.response?.data?.message || "No se pudo actualizar el pago.";
   }
@@ -52,11 +53,29 @@ async function revisarPago(idPago: number, estado: "PAGADO" | "RECHAZADO") {
 async function cambiarEstado(id: number, estado: string) {
   try {
     await actualizarEstadoPedido(id, estado);
-    mensaje.value = "Estado del pedido actualizado.";
     await cargarPedidos();
+    mensaje.value = "Estado del pedido actualizado.";
   } catch (e: any) {
     error.value =
       e.response?.data?.message || "No se pudo actualizar el pedido.";
+  }
+}
+
+// Cancelar pedido: independiente de rechazar el comprobante
+async function cancelarPedidoAdmin(id: number) {
+  const confirmar = window.confirm(
+    "¿Estás segura de cancelar este pedido? Se devolverá el stock de todos sus productos al inventario.",
+  );
+
+  if (!confirmar) return;
+
+  try {
+    await cancelarPedido(id, "");
+    await cargarPedidos();
+
+    mensaje.value = "Pedido cancelado y stock devuelto correctamente.";
+  } catch (e: any) {
+    error.value = e.response?.data?.message || "No se pudo cancelar el pedido.";
   }
 }
 
@@ -71,6 +90,7 @@ function claseEstado(estado: string) {
     EN_REVISION: "estado-revision",
     PAGADO: "estado-pagado",
     RECHAZADO: "estado-rechazado",
+    CANCELADO: "estado-cancelado",
     CONFIRMADO: "estado-confirmado",
     EN_PROCESO: "estado-proceso",
     ENVIADO: "estado-enviado",
@@ -133,15 +153,26 @@ onMounted(cargarPedidos);
       </div>
 
       <div class="pedido-contenido">
+        <!-- Datos del cliente -->
         <div class="seccion">
           <h3><i class="pi pi-user"></i> Datos del cliente</h3>
-          <p><strong>Cliente:</strong> {{ pedido.usuario?.nombre_completo }}</p>
-          <p><strong>Dirección:</strong> {{ pedido.direccion_entrega }}</p>
+
+          <p>
+            <strong>Cliente:</strong>
+            {{ pedido.usuario?.nombre_completo }}
+          </p>
+
+          <p>
+            <strong>Dirección:</strong>
+            {{ pedido.direccion_entrega }}
+          </p>
+
           <p class="total-pedido">
             Total del pedido: Bs {{ Number(pedido.total).toFixed(2) }}
           </p>
         </div>
 
+        <!-- Productos solicitados -->
         <div class="seccion">
           <h3><i class="pi pi-box"></i> Productos solicitados</h3>
 
@@ -165,10 +196,12 @@ onMounted(cargarPedidos);
               <strong>
                 {{ detalle.productoColor?.producto?.nombre || "Producto" }}
               </strong>
+
               <small>
                 Color:
                 {{ detalle.productoColor?.color?.nombre || "No especificado" }}
               </small>
+
               <small>Cantidad: {{ detalle.cantidad }}</small>
             </div>
 
@@ -176,6 +209,7 @@ onMounted(cargarPedidos);
               <strong>
                 Bs {{ Number(detalle.precio_unitario).toFixed(2) }}
               </strong>
+
               <small>
                 Subtotal: Bs {{ Number(detalle.subtotal).toFixed(2) }}
               </small>
@@ -183,22 +217,25 @@ onMounted(cargarPedidos);
           </div>
         </div>
 
+        <!-- Información del pago -->
         <div class="seccion">
           <h3><i class="pi pi-wallet"></i> Información del pago</h3>
 
           <div
             v-for="pago in pedido.pagos"
-            :key="pago.id_pago_pedido"
-            class="pago-detalle"
+            :key="pago.id_pago"
+            v-if="pedido.estado_pedido !== 'CANCELADO'"
           >
             <p>
               <strong>Titular:</strong>
               {{ pago.nombre_pagador || "No registrado" }}
             </p>
+
             <p>
               <strong>Comprobante:</strong>
               {{ pago.comprobante || "No registrado" }}
             </p>
+
             <p>
               <strong>Estado:</strong>
               <span class="estado" :class="claseEstado(pago.estado_pago)">
@@ -206,8 +243,10 @@ onMounted(cargarPedidos);
               </span>
             </p>
 
+            <!-- Aprobar y rechazar conservan su función -->
             <div v-if="pago.estado_pago === 'EN_REVISION'" class="acciones">
               <button
+                v-if="pedido.estado_pedido !== 'CANCELADO'"
                 class="btn-aprobar"
                 @click="revisarPago(pago.id_pago_pedido, 'PAGADO')"
               >
@@ -216,6 +255,7 @@ onMounted(cargarPedidos);
 
               <button
                 class="btn-rechazar"
+                v-if="pedido.estado_pedido !== 'CANCELADO'"
                 @click="revisarPago(pago.id_pago_pedido, 'RECHAZADO')"
               >
                 <i class="pi pi-times"></i> Rechazar
@@ -224,6 +264,30 @@ onMounted(cargarPedidos);
           </div>
         </div>
 
+        <!-- ÚNICA sección de cancelación del pedido -->
+        <div
+          v-if="pedido.estado_pedido === 'PENDIENTE'"
+          class="seccion seccion-cancelar"
+        >
+          <h3><i class="pi pi-ban"></i> Cancelación del pedido</h3>
+
+          <p>
+            Esta acción cancelará el pedido y devolverá los productos al
+            inventario.
+          </p>
+
+          <div class="acciones">
+            <button
+              class="btn-cancelar-pedido"
+              @click="cancelarPedidoAdmin(pedido.id_pedido)"
+            >
+              <i class="pi pi-ban"></i>
+              Cancelar pedido
+            </button>
+          </div>
+        </div>
+
+        <!-- Estado del pedido -->
         <div
           v-if="pedido.pagos?.some((p: any) => p.estado_pago === 'PAGADO')"
           class="seccion"
@@ -451,27 +515,34 @@ onMounted(cargarPedidos);
   background: #f5f0e8;
   color: #947345;
 }
+
 .estado-revision {
   background: #f8eddc;
   color: #a16d26;
 }
+
 .estado-pagado,
 .estado-entregado {
   background: #e7f1e8;
   color: #367346;
 }
-.estado-rechazado {
+
+.estado-rechazado,
+.estado-cancelado {
   background: #f8e7e5;
   color: #a33c35;
 }
+
 .estado-confirmado {
   background: #e9edf5;
   color: #4d638b;
 }
+
 .estado-proceso {
   background: #e8eef5;
   color: #486c91;
 }
+
 .estado-enviado {
   background: #eee8f5;
   color: #73558f;
@@ -485,7 +556,8 @@ onMounted(cargarPedidos);
 }
 
 .btn-aprobar,
-.btn-rechazar {
+.btn-rechazar,
+.btn-cancelar-pedido {
   border: 0;
   padding: 8px 12px;
   color: white;
@@ -496,8 +568,27 @@ onMounted(cargarPedidos);
 .btn-aprobar {
   background: #496b4e;
 }
+
 .btn-rechazar {
   background: #a64a42;
+}
+
+.btn-cancelar-pedido {
+  background: #a64a42;
+  padding: 10px 16px;
+  border-radius: 5px;
+  font-weight: 600;
+}
+
+.btn-cancelar-pedido:hover {
+  background: #87382f;
+}
+
+.seccion-cancelar {
+  background: #fffaf8;
+  padding: 13px;
+  border: 1px solid #f0dfda;
+  border-radius: 5px;
 }
 
 .finalizado {
@@ -515,6 +606,7 @@ onMounted(cargarPedidos);
   background: #f8e7e5;
   color: #a33c35;
 }
+
 .exito {
   background: #e7f1e8;
   color: #367346;

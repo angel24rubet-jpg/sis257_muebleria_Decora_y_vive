@@ -121,9 +121,9 @@ onMounted(cargarPedidos);
             <div>
               <span class="subtitulo">NÚMERO DE PEDIDO</span>
               <h3>{{ pedido.numero_pedido }}</h3>
-              <small
-                >Fecha de compra: {{ formatoFecha(pedido.fecha_pedido) }}</small
-              >
+              <small>
+                Fecha de compra: {{ formatoFecha(pedido.fecha_pedido) }}
+              </small>
             </div>
 
             <span class="estado" :class="claseEstado(pedido.estado_pedido)">
@@ -132,6 +132,7 @@ onMounted(cargarPedidos);
           </div>
 
           <div class="pedido-cuerpo">
+            <!-- PRODUCTOS -->
             <section class="seccion">
               <h4><i class="pi pi-box"></i> Productos de tu pedido</h4>
 
@@ -155,12 +156,14 @@ onMounted(cargarPedidos);
                   <strong>
                     {{ detalle.productoColor?.producto?.nombre || "Producto" }}
                   </strong>
+
                   <small>
                     Color:
                     {{
                       detalle.productoColor?.color?.nombre || "No especificado"
                     }}
                   </small>
+
                   <small>Cantidad: {{ detalle.cantidad }}</small>
                 </div>
 
@@ -180,6 +183,7 @@ onMounted(cargarPedidos);
               </div>
             </section>
 
+            <!-- INFORMACIÓN DE ENTREGA Y PAGO -->
             <section class="seccion informacion">
               <div>
                 <h4><i class="pi pi-map-marker"></i> Entrega</h4>
@@ -237,6 +241,40 @@ onMounted(cargarPedidos);
               </div>
             </section>
 
+            <!-- NUEVO AVISO PARA SOLICITAR CANCELACIÓN -->
+            <section
+              v-if="pedido.estado_pedido === 'PENDIENTE'"
+              class="aviso-cancelacion"
+            >
+              <div class="aviso-icono">
+                <i class="pi pi-info-circle"></i>
+              </div>
+
+              <div class="aviso-contenido">
+                <h4>¿Necesitas cancelar tu pedido?</h4>
+
+                <p>
+                  Para solicitar la cancelación de tu pedido, comunícate
+                  directamente con nuestra administración. Nuestro equipo te
+                  ayudará con el proceso.
+                </p>
+
+                <div class="contacto-telefono">
+                  <i class="pi pi-phone"></i>
+                  <div>
+                    <small>Celular de administración</small>
+                    <strong>{{ telefonoVisible }}</strong>
+                  </div>
+                </div>
+
+                <a :href="`tel:${telefono}`" class="btn-llamar">
+                  <i class="pi pi-phone"></i>
+                  Llamar a la tienda
+                </a>
+              </div>
+            </section>
+
+            <!-- SEGUIMIENTO DEL PEDIDO -->
             <section class="seguimiento">
               <h4><i class="pi pi-truck"></i> Seguimiento de tu pedido</h4>
 
@@ -548,6 +586,26 @@ onMounted(cargarPedidos);
   color: #73558f;
 }
 
+/* AVISO PARA SOLICITAR CANCELACIÓN */
+.aviso-cancelacion {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: #f5f0e8;
+  border: 1px solid #e8dccb;
+  border-left: 4px solid #ad8960;
+}
+
+.aviso-cancelacion .aviso-icono {
+  background: #eee3d4;
+  color: #947345;
+}
+
+.aviso-cancelacion .aviso-contenido h4 {
+  color: #49382e;
+}
+
 /* AVISO DE PAGO RECHAZADO */
 .aviso-rechazado {
   display: flex;
@@ -768,7 +826,8 @@ onMounted(cargarPedidos);
     height: 30px;
   }
 
-  .aviso-rechazado {
+  .aviso-rechazado,
+  .aviso-cancelacion {
     padding: 14px;
     gap: 10px;
   }
