@@ -8,6 +8,7 @@ import ClientesView from "../views/ClientesView.vue";
 import VentasView from "../views/VentasView.vue";
 import ReportesView from "../views/ReportesView.vue";
 import PedidosView from "../views/PedidosView.vue";
+import MisPedidosView from "../views/MisPedidosView.vue";
 
 import LoginView from "../views/LoginView.vue";
 import RegistroView from "../views/RegistroView.vue";
@@ -72,6 +73,14 @@ const router = createRouter({
       meta: { rol: "ADMINISTRADOR" },
     },
 
+    // MIS PEDIDOS: SOLO CLIENTES
+    {
+      path: "/mis-pedidos",
+      name: "mis-pedidos",
+      component: MisPedidosView,
+      meta: { rol: "CLIENTE" },
+    },
+
     // TIENDA Y CARRITO
     {
       path: "/tienda",
@@ -112,7 +121,6 @@ router.beforeEach((to) => {
 
   const rolRequerido = to.meta.rol as "ADMINISTRADOR" | "CLIENTE" | undefined;
 
-  // Verificar autenticacion y rol
   if (rolRequerido) {
     if (!auth.autenticado) {
       return { name: "login" };
@@ -127,7 +135,6 @@ router.beforeEach((to) => {
     }
   }
 
-  // Evitar volver al login si ya inicio sesion
   if ((to.name === "login" || to.name === "registro") && auth.autenticado) {
     return auth.usuario?.rol === "ADMINISTRADOR"
       ? { name: "home" }

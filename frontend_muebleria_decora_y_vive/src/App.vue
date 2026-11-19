@@ -45,9 +45,10 @@ function cerrarSesion() {
 
         <nav class="navegacion" v-if="!esAdministrador">
           <RouterLink to="/tienda">Inicio</RouterLink>
-          <RouterLink to="/tienda">Tienda</RouterLink>
-          <RouterLink to="/tienda">Colección</RouterLink>
-          <RouterLink to="/tienda">Novedades</RouterLink>
+
+          <RouterLink v-if="esCliente" to="/mis-pedidos">
+            Mis pedidos
+          </RouterLink>
         </nav>
 
         <nav class="navegacion" v-else>
@@ -71,6 +72,7 @@ function cerrarSesion() {
             <span class="usuario">
               {{ auth.usuario?.nombre_completo }}
             </span>
+
             <button class="btn-cuenta" @click="cerrarSesion">Salir</button>
           </template>
 
@@ -94,7 +96,12 @@ function cerrarSesion() {
 
         <div>
           <strong>Explora</strong>
-          <RouterLink to="/tienda">Tienda</RouterLink>
+          <RouterLink to="/tienda">Inicio</RouterLink>
+
+          <RouterLink v-if="esCliente" to="/mis-pedidos">
+            Mis pedidos
+          </RouterLink>
+
           <RouterLink to="/carrito">Mi carrito</RouterLink>
         </div>
 
