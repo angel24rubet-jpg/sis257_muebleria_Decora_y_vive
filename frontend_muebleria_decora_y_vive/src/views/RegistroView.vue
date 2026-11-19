@@ -7,7 +7,10 @@ const auth = useAuthStore();
 const router = useRouter();
 
 const formulario = ref({
-  nombre_completo: "",
+  nombres: "",
+  apellidos: "",
+  ci: "",
+  telefono: "",
   usuario: "",
   correo: "",
   password: "",
@@ -21,7 +24,13 @@ async function registrar() {
   cargando.value = true;
 
   try {
-    await auth.registrar(formulario.value);
+    const nombreCompleto = `${formulario.value.nombres.trim()} ${formulario.value.apellidos.trim()}`;
+
+    await auth.registrar({
+      ...formulario.value,
+      nombre_completo: nombreCompleto,
+    });
+
     router.push("/tienda");
   } catch (e: any) {
     error.value = e.response?.data?.message || "No se pudo crear la cuenta";
@@ -38,14 +47,38 @@ async function registrar() {
 
     <form @submit.prevent="registrar">
       <input
-        v-model="formulario.nombre_completo"
-        placeholder="Nombre completo"
+        v-model="formulario.nombres"
+        placeholder="Nombres"
+        maxlength="100"
+        required
+      />
+
+      <input
+        v-model="formulario.apellidos"
+        placeholder="Apellidos"
+        maxlength="100"
+        required
+      />
+
+      <input
+        v-model="formulario.ci"
+        placeholder="Carnet de identidad"
+        maxlength="20"
+        required
+      />
+
+      <input
+        v-model="formulario.telefono"
+        type="tel"
+        placeholder="Número de teléfono"
+        maxlength="20"
         required
       />
 
       <input
         v-model="formulario.usuario"
         placeholder="Nombre de usuario"
+        maxlength="50"
         required
       />
 
@@ -53,6 +86,7 @@ async function registrar() {
         v-model="formulario.correo"
         type="email"
         placeholder="Correo electrónico"
+        maxlength="120"
         required
       />
 

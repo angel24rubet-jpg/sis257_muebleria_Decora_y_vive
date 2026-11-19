@@ -10,6 +10,24 @@ export class Usuario {
   @PrimaryGeneratedColumn({ name: "id_usuario" })
   id_usuario: number;
 
+  // Datos personales
+  @Column({ type: "varchar", length: 100, nullable: true })
+  nombres: string | null;
+
+  @Column({ type: "varchar", length: 100, nullable: true })
+  apellidos: string | null;
+
+  @Column({
+    type: "varchar",
+    length: 20,
+    nullable: true,
+    unique: true,
+  })
+  ci: string | null;
+
+  @Column({ type: "varchar", length: 20, nullable: true })
+  telefono: string | null;
+
   // Nombre completo del usuario
   @Column({ type: "varchar", length: 150, nullable: false })
   nombre_completo: string;

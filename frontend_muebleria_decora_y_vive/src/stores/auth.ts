@@ -44,6 +44,10 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   async function registrar(datos: {
+    nombres: string;
+    apellidos: string;
+    ci: string;
+    telefono: string;
     nombre_completo: string;
     usuario: string;
     correo: string;

@@ -25,6 +25,7 @@ export class UsuariosService {
       where: [
         { usuario: createUsuarioDto.usuario },
         { correo: createUsuarioDto.correo },
+        { ci: createUsuarioDto.ci },
       ],
     });
 
@@ -69,6 +70,10 @@ export class UsuariosService {
     return this.usuarioRepository.find({
       select: {
         id_usuario: true,
+        nombres: true,
+        apellidos: true,
+        ci: true,
+        telefono: true,
         nombre_completo: true,
         usuario: true,
         correo: true,
@@ -86,6 +91,10 @@ export class UsuariosService {
       where: { id_usuario: id },
       select: {
         id_usuario: true,
+        nombres: true,
+        apellidos: true,
+        ci: true,
+        telefono: true,
         nombre_completo: true,
         usuario: true,
         correo: true,

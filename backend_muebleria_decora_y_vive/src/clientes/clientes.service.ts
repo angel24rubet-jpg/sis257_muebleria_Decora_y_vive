@@ -1,23 +1,25 @@
-
 import {
   Injectable,
   NotFoundException,
   ConflictException,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 
-import { Cliente } from './entities/cliente.entity';
-import { CreateClienteDto } from './dto/create-cliente.dto';
-import { UpdateClienteDto } from './dto/update-cliente.dto';
+import { Cliente } from "./entities/cliente.entity";
+import { Usuario } from "../usuarios/entities/usuario.entity";
+import { CreateClienteDto } from "./dto/create-cliente.dto";
+import { UpdateClienteDto } from "./dto/update-cliente.dto";
 
 @Injectable()
 export class ClientesService {
   constructor(
-    // Conexion con la tabla clientes
     @InjectRepository(Cliente)
     private readonly clienteRepository: Repository<Cliente>,
+
+    @InjectRepository(Usuario)
+    private readonly usuarioRepository: Repository<Usuario>,
   ) {}
 
   // Registrar un cliente
@@ -27,7 +29,7 @@ export class ClientesService {
     });
 
     if (clienteExistente) {
-      throw new ConflictException('El CI ya esta registrado');
+      throw new ConflictException("El CI ya esta registrado");
     }
 
     const cliente = this.clienteRepository.create(createClienteDto);
@@ -35,9 +37,45 @@ export class ClientesService {
     return await this.clienteRepository.save(cliente);
   }
 
-  // Listar todos los clientes
+  // Listar clientes presenciales y virtuales
   async findAll() {
-    return await this.clienteRepository.find();
+    const clientesPresenciales = await this.clienteRepository.find();
+
+    const clientesVirtuales = await this.usuarioRepository.find({
+      where: { rol: "CLIENTE" },
+      select: {
+        id_usuario: true,
+        nombres: true,
+        apellidos: true,
+        ci: true,
+        telefono: true,
+        nombre_completo: true,
+        correo: true,
+        estado: true,
+        fecha_registro: true,
+      },
+    });
+
+    const presenciales = clientesPresenciales.map((cliente) => ({
+      ...cliente,
+      origen: "PRESENCIAL",
+    }));
+
+    const virtuales = clientesVirtuales.map((usuario) => ({
+      id_cliente: null,
+      id_usuario: usuario.id_usuario,
+      nombres: usuario.nombres,
+      apellidos: usuario.apellidos,
+      ci: usuario.ci,
+      telefono: usuario.telefono,
+      correo: usuario.correo,
+      direccion: null,
+      estado: usuario.estado,
+      fecha_registro: usuario.fecha_registro,
+      origen: "VIRTUAL",
+    }));
+
+    return [...presenciales, ...virtuales];
   }
 
   // Buscar un cliente por ID
@@ -47,9 +85,7 @@ export class ClientesService {
     });
 
     if (!cliente) {
-      throw new NotFoundException(
-        `Cliente con ID ${id} no encontrado`,
-      );
+      throw new NotFoundException(`Cliente con ID ${id} no encontrado`);
     }
 
     return cliente;
@@ -65,7 +101,7 @@ export class ClientesService {
       });
 
       if (clienteExistente) {
-        throw new ConflictException('El CI ya esta registrado');
+        throw new ConflictException("El CI ya esta registrado");
       }
     }
 
@@ -81,7 +117,7 @@ export class ClientesService {
     await this.clienteRepository.remove(cliente);
 
     return {
-      mensaje: 'Cliente eliminado correctamente',
+      mensaje: "Cliente eliminado correctamente",
     };
   }
 }

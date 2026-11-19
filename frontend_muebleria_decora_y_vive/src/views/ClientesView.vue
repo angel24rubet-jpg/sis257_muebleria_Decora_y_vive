@@ -373,6 +373,7 @@ onMounted(() => {
             <tr>
               <th>ID</th>
               <th>Cliente</th>
+              <th>Origen</th>
               <th>CI</th>
               <th>Teléfono</th>
               <th>Correo</th>
@@ -384,8 +385,21 @@ onMounted(() => {
           </thead>
 
           <tbody>
-            <tr v-for="cliente in clientesFiltrados" :key="cliente.id_cliente">
-              <td class="id-cliente">#{{ cliente.id_cliente }}</td>
+            <tr
+              v-for="cliente in clientesFiltrados"
+              :key="
+                cliente.origen === 'VIRTUAL'
+                  ? 'V-' + cliente.id_usuario
+                  : 'P-' + cliente.id_cliente
+              "
+            >
+              <td class="id-cliente">
+                {{
+                  cliente.origen === "VIRTUAL"
+                    ? "#U-" + cliente.id_usuario
+                    : "#C-" + cliente.id_cliente
+                }}
+              </td>
 
               <td>
                 <div class="cliente-info">
@@ -399,18 +413,30 @@ onMounted(() => {
                 </div>
               </td>
 
-              <td>{{ cliente.ci }}</td>
+              <td>
+                <span
+                  :class="
+                    cliente.origen === 'VIRTUAL'
+                      ? 'origen-virtual'
+                      : 'origen-presencial'
+                  "
+                >
+                  {{ cliente.origen }}
+                </span>
+              </td>
+
+              <td>{{ cliente.ci || "-" }}</td>
 
               <td class="telefono-cliente">
-                {{ cliente.telefono }}
+                {{ cliente.telefono || "-" }}
               </td>
 
               <td class="correo-cliente">
-                {{ cliente.correo }}
+                {{ cliente.correo || "-" }}
               </td>
 
               <td class="direccion-cliente">
-                {{ cliente.direccion }}
+                {{ cliente.direccion || "-" }}
               </td>
 
               <td>
@@ -426,7 +452,10 @@ onMounted(() => {
               </td>
 
               <td>
-                <div class="acciones-cliente">
+                <div
+                  v-if="cliente.origen === 'PRESENCIAL'"
+                  class="acciones-cliente"
+                >
                   <button
                     class="btn-accion btn-editar"
                     title="Editar cliente"
@@ -443,11 +472,13 @@ onMounted(() => {
                     <i class="pi pi-trash"></i>
                   </button>
                 </div>
+
+                <span v-else class="texto-virtual">Cuenta virtual</span>
               </td>
             </tr>
 
             <tr v-if="clientesFiltrados.length === 0">
-              <td colspan="9" class="sin-resultados">
+              <td colspan="10" class="sin-resultados">
                 <i class="pi pi-search"></i>
                 <p class="mb-0">No se encontraron clientes.</p>
               </td>
@@ -698,6 +729,33 @@ onMounted(() => {
 .estado-inactivo {
   background: #f7e9e6;
   color: #a14f42;
+}
+
+.origen-virtual,
+.origen-presencial {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.origen-virtual {
+  background: #eee8f7;
+  color: #7041a6;
+}
+
+.origen-presencial {
+  background: #eaf3e9;
+  color: #47744b;
+}
+
+.texto-virtual {
+  color: #8b7b70;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .acciones-cliente {

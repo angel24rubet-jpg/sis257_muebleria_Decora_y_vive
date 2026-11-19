@@ -9,9 +9,12 @@ import {
 } from "@/services/ventaService";
 
 import { listarClientes } from "@/services/clienteService";
+import { listarPedidos } from "@/services/pedidosService";
 import { listarProductos, buscarProducto } from "@/services/productoService";
 
 const ventas = ref<any[]>([]);
+const pedidos = ref<any[]>([]);
+const apartadoActivo = ref<"presenciales" | "virtuales">("presenciales");
 const clientes = ref<any[]>([]);
 const productos = ref<any[]>([]);
 
@@ -24,6 +27,7 @@ const mostrarFormulario = ref(false);
 const mostrarDetalle = ref(false);
 
 const ventaSeleccionada = ref<any>(null);
+const pedidoSeleccionado = ref<any>(null);
 
 const idCliente = ref<number | null>(null);
 const descuento = ref(0);
@@ -64,6 +68,68 @@ const ventasFiltradas = computed(() => {
     );
   });
 });
+
+const pedidosVirtuales = computed(() => {
+  const termino = busqueda.value.toLowerCase().trim();
+
+  return pedidos.value.filter((pedido) => {
+    const pagoConfirmado =
+      pedido.estado_pago === "PAGADO" ||
+      pedido.pagos?.some((pago: any) => pago.estado_pago === "PAGADO");
+
+    if (!pagoConfirmado) return false;
+
+    const cliente = pedido.usuario?.nombre_completo || "";
+    const productosPedido = (pedido.detalles || [])
+      .map((detalle: any) => detalle.productoColor?.producto?.nombre || "")
+      .join(" ");
+
+    return (
+      String(pedido.numero_pedido || "")
+        .toLowerCase()
+        .includes(termino) ||
+      cliente.toLowerCase().includes(termino) ||
+      productosPedido.toLowerCase().includes(termino) ||
+      String(pedido.id_pedido || "").includes(termino)
+    );
+  });
+});
+
+const verPedidoVirtual = (pedido: any) => {
+  pedidoSeleccionado.value = pedido;
+  mostrarDetalle.value = false;
+  mostrarFormulario.value = false;
+};
+
+const cerrarDetallePedido = () => {
+  pedidoSeleccionado.value = null;
+};
+
+const pagoDelPedido = (pedido: any) => {
+  return (
+    (pedido.pagos || []).find((pago: any) => pago.estado_pago === "PAGADO") ||
+    null
+  );
+};
+
+const cargarPedidos = async () => {
+  try {
+    pedidos.value = await listarPedidos();
+  } catch (err) {
+    console.error("Error al cargar pedidos virtuales:", err);
+    mensaje.value = "No se pudieron cargar las ventas virtuales.";
+  }
+};
+
+const productosDelPedido = (pedido: any) => {
+  return (pedido.detalles || [])
+    .map((detalle: any) => {
+      const nombre = detalle.productoColor?.producto?.nombre || "Producto";
+      const color = detalle.productoColor?.color?.nombre || "Sin color";
+      return `${nombre} (${color}) x${detalle.cantidad}`;
+    })
+    .join(", ");
+};
 
 const cargarVentas = async () => {
   try {
@@ -231,7 +297,7 @@ const registrar = async () => {
     limpiarFormulario();
     mostrarFormulario.value = false;
 
-    await Promise.all([cargarVentas(), cargarProductos()]);
+    await Promise.all([cargarVentas(), cargarPedidos(), cargarProductos()]);
   } catch (err: any) {
     console.error("Error al registrar venta:", err);
 
@@ -298,7 +364,12 @@ const formatoDinero = (valor: any) => {
 };
 
 onMounted(async () => {
-  await Promise.all([cargarVentas(), cargarClientes(), cargarProductos()]);
+  await Promise.all([
+    cargarVentas(),
+    cargarPedidos(),
+    cargarClientes(),
+    cargarProductos(),
+  ]);
 });
 </script>
 
@@ -316,7 +387,11 @@ onMounted(async () => {
         </p>
       </div>
 
-      <button class="btn btn-nuevo" @click="abrirFormulario">
+      <button
+        v-if="apartadoActivo === 'presenciales'"
+        class="btn btn-nuevo"
+        @click="abrirFormulario"
+      >
         <i class="pi pi-plus me-2"></i>
         Registrar venta
       </button>
@@ -661,14 +736,178 @@ onMounted(async () => {
       </div>
     </section>
 
+    <!-- DETALLE DE PEDIDO VIRTUAL -->
+    <section v-if="pedidoSeleccionado" class="detalle-admin card mb-4">
+      <div
+        class="detalle-header d-flex justify-content-between align-items-center"
+      >
+        <div>
+          <span class="subtitulo-admin">COMPRA EN TIENDA VIRTUAL</span>
+          <h2 class="formulario-titulo">Detalle del pedido</h2>
+        </div>
+        <button class="btn btn-cancelar" @click="cerrarDetallePedido">
+          <i class="pi pi-times me-1"></i>
+          Cerrar
+        </button>
+      </div>
+
+      <div class="row g-3 mt-2 mb-4">
+        <div class="col-md-4">
+          <div class="dato-venta">
+            <span>Número de pedido</span>
+            <strong>{{ pedidoSeleccionado.numero_pedido }}</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="dato-venta">
+            <span>Cliente</span>
+            <strong>{{
+              pedidoSeleccionado.usuario?.nombre_completo || "Cliente"
+            }}</strong>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="dato-venta">
+            <span>Fecha del pedido</span>
+            <strong>{{ formatoFecha(pedidoSeleccionado.fecha_pedido) }}</strong>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="dato-venta">
+            <span>Dirección de entrega</span>
+            <strong>{{
+              pedidoSeleccionado.direccion_entrega || "No especificada"
+            }}</strong>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="dato-venta">
+            <span>Estado del pedido</span>
+            <strong>{{
+              pedidoSeleccionado.estado_pedido || "PENDIENTE"
+            }}</strong>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="dato-venta">
+            <span>Estado del pago</span>
+            <strong class="texto-pagado">PAGADO</strong>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="seccion-formulario mb-3">Productos del pedido</h3>
+      <div class="table-responsive">
+        <table class="table tabla-ventas align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Color</th>
+              <th>Cantidad</th>
+              <th>Precio unitario</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(detalle, index) in pedidoSeleccionado.detalles || []"
+              :key="detalle.id_detalle_pedido || index"
+            >
+              <td>{{ detalle.productoColor?.producto?.nombre || "-" }}</td>
+              <td>{{ detalle.productoColor?.color?.nombre || "-" }}</td>
+              <td>{{ detalle.cantidad }}</td>
+              <td>Bs. {{ formatoDinero(detalle.precio_unitario) }}</td>
+              <td class="precio-tabla">
+                Bs. {{ formatoDinero(detalle.subtotal) }}
+              </td>
+            </tr>
+            <tr v-if="!pedidoSeleccionado.detalles?.length">
+              <td colspan="5" class="sin-resultados">
+                Este pedido no tiene productos registrados.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="resumen-detalle">
+        <div class="d-flex justify-content-between">
+          <span>Subtotal:</span>
+          <strong>Bs. {{ formatoDinero(pedidoSeleccionado.subtotal) }}</strong>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span>Descuento:</span>
+          <strong>Bs. {{ formatoDinero(pedidoSeleccionado.descuento) }}</strong>
+        </div>
+        <div class="linea-total"></div>
+        <div class="d-flex justify-content-between">
+          <span class="total-etiqueta">TOTAL</span>
+          <strong class="total-valor"
+            >Bs. {{ formatoDinero(pedidoSeleccionado.total) }}</strong
+          >
+        </div>
+      </div>
+
+      <div
+        v-if="pagoDelPedido(pedidoSeleccionado)"
+        class="datos-pago-virtual mt-4"
+      >
+        <h3 class="seccion-formulario mb-2">Información del pago</h3>
+        <p v-if="pagoDelPedido(pedidoSeleccionado).nombre_pagador" class="mb-1">
+          <strong>Pagador:</strong>
+          {{ pagoDelPedido(pedidoSeleccionado).nombre_pagador }}
+        </p>
+        <p v-if="pagoDelPedido(pedidoSeleccionado).observacion" class="mb-0">
+          <strong>Observación:</strong>
+          {{ pagoDelPedido(pedidoSeleccionado).observacion }}
+        </p>
+        <p v-if="pagoDelPedido(pedidoSeleccionado).comprobante" class="mb-0">
+          <strong>Comprobante:</strong>
+          {{ pagoDelPedido(pedidoSeleccionado).comprobante }}
+        </p>
+      </div>
+    </section>
+
     <!-- LISTADO DE VENTAS -->
     <section class="listado-admin card">
       <div
         class="listado-header d-flex flex-wrap justify-content-between align-items-center gap-3"
       >
-        <div>
-          <h2 class="listado-titulo">Ventas registradas</h2>
-          <p class="texto-ayuda mb-0">Total: {{ ventas.length }} ventas</p>
+        <div class="w-100">
+          <h2 class="listado-titulo">Registro de ventas</h2>
+          <div class="pestanas-ventas mt-3">
+            <button
+              type="button"
+              class="pestana-venta"
+              :class="{ activa: apartadoActivo === 'presenciales' }"
+              @click="apartadoActivo = 'presenciales'"
+            >
+              <i class="pi pi-shop me-2"></i>
+              Ventas presenciales
+              <span class="contador-pestana">{{ ventas.length }}</span>
+            </button>
+            <button
+              type="button"
+              class="pestana-venta"
+              :class="{ activa: apartadoActivo === 'virtuales' }"
+              @click="apartadoActivo = 'virtuales'"
+            >
+              <i class="pi pi-globe me-2"></i>
+              Ventas virtuales
+              <span class="contador-pestana">{{
+                pedidosVirtuales.length
+              }}</span>
+            </button>
+          </div>
+          <p
+            v-if="apartadoActivo === 'presenciales'"
+            class="texto-ayuda mb-0 mt-2"
+          >
+            Total: {{ ventas.length }} ventas registradas en tienda.
+          </p>
+          <p v-else class="texto-ayuda mb-0 mt-2">
+            Pedidos de la tienda virtual con pago confirmado.
+          </p>
         </div>
 
         <div class="buscador-ventas">
@@ -686,7 +925,10 @@ onMounted(async () => {
         <p>Cargando información...</p>
       </div>
 
-      <div v-else-if="!error" class="table-responsive">
+      <div
+        v-else-if="!error && apartadoActivo === 'presenciales'"
+        class="table-responsive"
+      >
         <table class="table tabla-ventas align-middle mb-0">
           <thead>
             <tr>
@@ -763,6 +1005,68 @@ onMounted(async () => {
               <td colspan="9" class="sin-resultados">
                 <i class="pi pi-search"></i>
                 <p class="mb-0">No se encontraron ventas.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- VENTAS REALIZADAS EN LA TIENDA VIRTUAL -->
+      <div
+        v-else-if="!error && apartadoActivo === 'virtuales'"
+        class="table-responsive"
+      >
+        <table class="table tabla-ventas tabla-virtuales align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th>Cliente</th>
+              <th>Fecha</th>
+              <th>Productos</th>
+              <th>Dirección de entrega</th>
+              <th>Total</th>
+              <th>Estado del pedido</th>
+              <th>Pago</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="pedido in pedidosVirtuales" :key="pedido.id_pedido">
+              <td class="comprobante-venta">{{ pedido.numero_pedido }}</td>
+              <td>{{ pedido.usuario?.nombre_completo || "Cliente" }}</td>
+              <td class="fecha-venta">
+                {{ formatoFecha(pedido.fecha_pedido) }}
+              </td>
+              <td class="productos-pedido">
+                {{ productosDelPedido(pedido) || "Sin productos" }}
+              </td>
+              <td>{{ pedido.direccion_entrega || "-" }}</td>
+              <td class="precio-tabla">
+                Bs. {{ formatoDinero(pedido.total) }}
+              </td>
+              <td>
+                <span class="estado-pedido-virtual">
+                  {{ pedido.estado_pedido || "PENDIENTE" }}
+                </span>
+              </td>
+              <td><span class="estado-pagado">PAGADO</span></td>
+              <td>
+                <div class="acciones-venta">
+                  <button
+                    type="button"
+                    class="btn-accion btn-ver"
+                    title="Ver detalle del pedido"
+                    @click="verPedidoVirtual(pedido)"
+                  >
+                    <i class="pi pi-eye"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="pedidosVirtuales.length === 0">
+              <td colspan="9" class="sin-resultados">
+                <i class="pi pi-shopping-bag"></i>
+                <p class="mb-0">No hay ventas virtuales con pago confirmado.</p>
               </td>
             </tr>
           </tbody>
@@ -1012,6 +1316,19 @@ onMounted(async () => {
   font-size: 12px;
 }
 
+.texto-pagado {
+  color: #47744b !important;
+}
+
+.datos-pago-virtual {
+  padding: 14px;
+  border: 1px solid #e9dfd3;
+  border-radius: 7px;
+  background: #faf7f2;
+  color: #66564a;
+  font-size: 12px;
+}
+
 .resumen-detalle {
   width: 280px;
   max-width: 100%;
@@ -1168,6 +1485,77 @@ onMounted(async () => {
 .sin-resultados i {
   font-size: 20px;
   margin-bottom: 8px;
+}
+
+.pestanas-ventas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid #eee5db;
+}
+
+.pestana-venta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 13px;
+  margin-bottom: -1px;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #8b7b70;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pestana-venta:hover,
+.pestana-venta.activa {
+  color: #634632;
+}
+
+.pestana-venta.activa {
+  border-bottom-color: #a17b4d;
+}
+
+.contador-pestana {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 12px;
+  background: #f2eade;
+  color: #806044;
+  font-size: 10px;
+}
+
+.tabla-virtuales {
+  min-width: 1150px;
+}
+
+.productos-pedido {
+  min-width: 220px;
+  max-width: 330px;
+  white-space: normal !important;
+  line-height: 1.5;
+}
+
+.estado-pedido-virtual,
+.estado-pagado {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: #f2eade;
+  color: #806044;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.estado-pagado {
+  background: #eaf3e9;
+  color: #47744b;
 }
 
 @media (max-width: 768px) {
